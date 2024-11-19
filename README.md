@@ -1,6 +1,7 @@
 # Mathematical Modelling - Fall 2024
 
-## Assignment: Cutting Stock Problem
+This is a fork from the Big Project in HCMUT!
+<!-- ## Assignment: Cutting Stock Problem
 <!-- Describe cutting stock problem -->
 Cuttin Stock Problem is a combinatorial optimization problem that arises in many industrial applications. The problem consists of cutting stocks of material into smaller pieces in order to meet the demand for smaller pieces. The objective is to minimize the number of stocks used to meet the demand for smaller pieces. The problem is NP-hard and can be solved using integer programming techniques.
 
@@ -43,4 +44,4 @@ To contribute to the project, you need to fork the repository and create a new b
 
 ## License
 <!-- Describe the license under which the project is distributed -->
-This project is distributed under the MIT License. See `LICENSE` for more information.
+This project is distributed under the MIT License. See `LICENSE` for more information. -->
