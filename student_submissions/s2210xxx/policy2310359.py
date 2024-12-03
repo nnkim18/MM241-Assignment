@@ -10,46 +10,52 @@ class Policy2310359(Policy):
     def get_action(self, observation, info):
         # Student code here
 
-        if len(self.skylines) == 0:
+        #if len(self.skylines) == 0:
+        if info['filled_ratio'] == 0.0:
+            # the env have been reseted
             self.init_skyline_set(observation["stocks"])
-            print(self.skylines)
 
-        for prod in observation["products"]:
-            print("Waste:", [self.calculate_minimum_local_waste(prod, observation["stocks"][0], 0)])
-            break
-
-        ### this naive algorithm just makes code run normal
         list_prods = observation["products"]
+        list_prods = sorted(list_prods, key=lambda x: -x["size"][0])
 
         prod_size = [0, 0]
         stock_idx = -1
         pos_x, pos_y = 0, 0
 
         for prod in list_prods:
-            if (prod["quantity"] > 0):
-                prod_size = prod["size"]
+            if prod["quantity"] == 0: continue
 
-                for i, stock in enumerate(observation["stocks"]):
-                    stock_w, stock_h = self._get_stock_size_(stock)
-                    prod_w, prod_h = prod_size
+            prod_size = prod["size"]
 
-                    if stock_w < prod_h or stock_h < prod_h:
-                        continue
-
-                    if not self._can_place_(stock, (0, 0), prod_size):
-                        continue
-
-                    return {"stock_idx": i, "size": prod_size, "position": (0, 0)}
-        pass
+            for stock_idx, stock in enumerate(observation["stocks"]):
+                waste_area, (pos_x, pos_y) = self.calculate_minimum_local_waste(prod, stock, stock_idx)
+                pos_x, pos_y = int(pos_x), int(pos_y)
+                if pos_x != -1:
+                    # ok
+                    print(f'Placing on {stock_idx}')
+                    self.place_product(prod, (pos_x, pos_y), stock, stock_idx)
+                    place = {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
+                    print(f'place: {place}')
+                    return place
 
     # Student code here
     # You can add more functions if needed
 
+    # NOTES:
+    # prod["size"] is [prod_w, prod_h]
+
+    # Current optimal strategy:
+    # Minimum local waste
+
+    # Skyline is a set of 3-int tuple (x_start, x_end, height)
     class SkylinePart():
         def __init__(self, x_start, x_end, height) -> None:
             self.x_start = x_start
             self.x_end = x_end
             self.height = height
+
+        def __str__(self):
+            return f'SkylinePart({self.x_start}, {self.x_end}, {self.height})'
 
         def _intersect_(self, prod_size, prod_pos) -> bool:
             # intersect here means positive common areas, which makes this placement invalid
@@ -75,10 +81,10 @@ class Policy2310359(Policy):
 
     #####################
 
-
-    # skyline is a set of 3-int tuple (x_start, x_end, height)
+    
     def init_skyline_set(self, stocks):
         # this will initialize the skyline set
+        self.skylines = []
         for i, stock in enumerate(stocks):
             self.skylines += [[Policy2310359.SkylinePart(0, self._get_stock_size_(stock)[0], 0)]]
 
@@ -90,6 +96,7 @@ class Policy2310359(Policy):
         prod_w, prod_h = product["size"]
 
         WONT_USE = 1e18
+
         waste_area = WONT_USE
         placement_choice = (-1, -1)
 
@@ -98,13 +105,34 @@ class Policy2310359(Policy):
             # now have to check validness
             pos_x, pos_y = part.x_start, part.height
 
-            # check if product in stock
-            if not (pos_x + prod_w <= stock_w and pos_y + prod_h <= prod_h): continue
-
-            # Must not intersect other part
+            if not self._can_place_(stock, (pos_x, pos_y), product["size"]): continue
             ok = True
-            for other_part in self.skylines[part_idx]:
-                if other_part._intersect_(product["size"], (pos_x, pos_y)):
+            for part in self.skylines[stock_idx]:
+                if part._intersect_(product["size"], (pos_x, pos_y)):
+                    ok = False
+                    break
+            
+            if not ok: continue
+
+            current_waste_area = 0
+            for each_part in self.skylines[stock_idx]:
+                current_waste_area += each_part._calculate_local_waste_((prod_w, prod_h), (pos_x, pos_y))
+
+            if waste_area > current_waste_area:
+                waste_area = current_waste_area
+                placement_choice = (pos_x, pos_y)
+
+        # rightmost on each part (kinda similar)
+        for part_idx, part in enumerate(self.skylines[stock_idx]):
+            # now have to check validness
+            pos_x, pos_y = part.x_end - prod_w, int(part.height)
+
+            if pos_x < 0: continue
+
+            if not self._can_place_(stock, (pos_x, pos_y), product["size"]): continue
+            ok = True
+            for part in self.skylines[stock_idx]:
+                if part._intersect_(product["size"], (pos_x, pos_y)):
                     ok = False
                     break
             
@@ -118,4 +146,42 @@ class Policy2310359(Policy):
                 waste_area = current_waste_area
                 placement_choice = (pos_x, pos_y)
         
-        return int(waste_area)
+        return int(waste_area), placement_choice
+
+    def place_product(self, product, pos, stock, stock_idx):
+        new_skyline = []
+
+        prod_w, prod_h = product["size"]
+
+        pos_x, pos_y = pos
+        x_start = int(pos_x)
+        x_end = int(x_start + prod_w)
+
+        stock_w, stock_h = self._get_stock_size_(stock)
+        height = pos_y + prod_h
+
+        new_skyline += [Policy2310359.SkylinePart(x_start, x_end, height)]
+
+        for other_part in self.skylines[stock_idx]:
+            if other_part.x_end <= x_start or other_part.x_start >= x_end:
+                # not interset
+                new_skyline += [other_part]
+                continue
+                
+            if x_start <= other_part.x_start and other_part.x_end <= x_end:
+                continue
+
+            if other_part.x_start < x_start:
+                new_skyline += [Policy2310359.SkylinePart(other_part.x_start, x_start, other_part.height)]
+            else:
+                new_skyline += [Policy2310359.SkylinePart(x_end, other_part.x_end, other_part.height)]
+
+
+        new_skyline = sorted(new_skyline, key=lambda x: x.x_start)
+
+        self.skylines[stock_idx] = new_skyline
+
+        print(f'stock_idx: {stock_idx}')
+        for i in self.skylines[stock_idx]:
+            print(i,end=',')
+        print('')
