@@ -5,6 +5,7 @@ class Policy2310359(Policy):
     def __init__(self):
         # Student code here
         self.skylines = []
+        self.stock_used = 0
         pass
 
     def get_action(self, observation, info):
@@ -27,25 +28,40 @@ class Policy2310359(Policy):
 
             prod_size = prod["size"]
 
+            waste_area, (pos_x, pos_y) = 1e18, (-1, -1)
+            stock_idx_choice = -1
+
             for stock_idx, stock in enumerate(observation["stocks"]):
-                waste_area, (pos_x, pos_y) = self.calculate_minimum_local_waste(prod, stock, stock_idx)
-                pos_x, pos_y = int(pos_x), int(pos_y)
-                if pos_x != -1:
-                    # ok
-                    print(f'Placing on {stock_idx}')
-                    self.place_product(prod, (pos_x, pos_y), stock, stock_idx)
-                    place = {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
-                    print(f'place: {place}')
-                    return place
+                if stock_idx >= self.stock_used: break
+
+                current_waste_area, (tmp_x, tmp_y) = self.calculate_minimum_local_waste(prod, stock, stock_idx)
+                if (current_waste_area < waste_area):
+                    waste_area = current_waste_area
+                    pos_x, pos_y = tmp_x, tmp_y
+                    stock_idx_choice = stock_idx
+
+            while waste_area == 1e18:
+                self.stock_used += 1
+
+                current_waste_area, (tmp_x, tmp_y) = self.calculate_minimum_local_waste(prod, observation["stocks"][self.stock_used - 1], self.stock_used - 1)
+                if (current_waste_area < 1e18):
+                    waste_area = current_waste_area
+                    pos_x, pos_y = tmp_x, tmp_y
+                    stock_idx_choice = stock_idx
+                    break
+
+            self.place_product(prod, (pos_x, pos_y), observation["stocks"][stock_idx_choice], stock_idx_choice)
+            place = {"stock_idx": stock_idx_choice, "size": prod_size, "position": (pos_x, pos_y)}
+            print(f'place: {place}')
+            return place 
 
     # Student code here
     # You can add more functions if needed
 
-    # NOTES:
-    # prod["size"] is [prod_w, prod_h]
-
-    # Current optimal strategy:
+    # CURRENT OPTIMAL STRATEGY:
     # Minimum local waste
+    # Maximum fitness level
+    # Sort by area
 
     # Skyline is a set of 3-int tuple (x_start, x_end, height)
     class SkylinePart():
@@ -105,13 +121,14 @@ class Policy2310359(Policy):
             # now have to check validness
             pos_x, pos_y = part.x_start, part.height
 
+            if pos_x < 0 or pos_x + prod_w > stock_w: continue
+            if pos_y < 0 or pos_y + prod_h > stock_h: continue
             if not self._can_place_(stock, (pos_x, pos_y), product["size"]): continue
             ok = True
             for part in self.skylines[stock_idx]:
                 if part._intersect_(product["size"], (pos_x, pos_y)):
                     ok = False
                     break
-            
             if not ok: continue
 
             current_waste_area = 0
@@ -127,8 +144,8 @@ class Policy2310359(Policy):
             # now have to check validness
             pos_x, pos_y = part.x_end - prod_w, int(part.height)
 
-            if pos_x < 0: continue
-
+            if pos_x < 0 or pos_x + prod_w > stock_w: continue
+            if pos_y < 0 or pos_y + prod_h > stock_h: continue
             if not self._can_place_(stock, (pos_x, pos_y), product["size"]): continue
             ok = True
             for part in self.skylines[stock_idx]:
