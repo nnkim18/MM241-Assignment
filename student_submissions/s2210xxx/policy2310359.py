@@ -6,18 +6,20 @@ class Policy2310359(Policy):
         # Student code here
         self.skylines = []
         self.stock_used = 0
+
+        self.stocks = []
+        self.area_used = 0
+        self.area_used_stock = 0
         pass
 
     def get_action(self, observation, info):
         # Student code here
-
-        #if len(self.skylines) == 0:
         if info['filled_ratio'] == 0.0:
             # the env have been reseted
             self.init_skyline_set(observation["stocks"])
 
         list_prods = observation["products"]
-        list_prods = sorted(list_prods, key=lambda x: -x["size"][0])
+        list_prods = sorted(list_prods, key=lambda x: -(x["size"][0] * x["size"][1]))
 
         prod_size = [0, 0]
         stock_idx = -1
@@ -27,43 +29,61 @@ class Policy2310359(Policy):
             if prod["quantity"] == 0: continue
 
             prod_size = prod["size"]
+            if (prod_size[0] < prod_size[1]): prod_size[0], prod_size[1] = prod_size[1], prod_size[0]
 
             waste_area, (pos_x, pos_y) = 1e18, (-1, -1)
             stock_idx_choice = -1
+            should_rotate = False
 
-            for stock_idx, stock in enumerate(observation["stocks"]):
-                if stock_idx >= self.stock_used: break
+            for i, (stock, stock_idx) in enumerate(self.stocks):
+                if i >= self.stock_used: break
 
-                current_waste_area, (tmp_x, tmp_y) = self.calculate_minimum_local_waste(prod, stock, stock_idx)
+                current_waste_area, (tmp_x, tmp_y), tmp_rotate = self.calculate_minimum_local_waste(prod, stock, stock_idx)
                 if (current_waste_area < waste_area):
                     waste_area = current_waste_area
                     pos_x, pos_y = tmp_x, tmp_y
                     stock_idx_choice = stock_idx
+                    should_rotate = tmp_rotate
+                    break
 
+            # Use new stock
             while waste_area == 1e18:
                 self.stock_used += 1
+                stock_w, stock_h = self._get_stock_size_(self.stocks[self.stock_used - 1][0])
+                self.area_used_stock += stock_w * stock_h
 
-                current_waste_area, (tmp_x, tmp_y) = self.calculate_minimum_local_waste(prod, observation["stocks"][self.stock_used - 1], self.stock_used - 1)
+                current_waste_area, (tmp_x, tmp_y), tmp_rotate = self.calculate_minimum_local_waste(prod, self.stocks[self.stock_used - 1][0], self.stocks[self.stock_used - 1][1])
                 if (current_waste_area < 1e18):
                     waste_area = current_waste_area
                     pos_x, pos_y = tmp_x, tmp_y
-                    stock_idx_choice = stock_idx
+                    stock_idx_choice = self.stocks[self.stock_used - 1][1]
+                    should_rotate = tmp_rotate
                     break
-
+            
+            if (should_rotate): prod["size"][0], prod["size"][1] = prod["size"][1], prod["size"][0]
             self.place_product(prod, (pos_x, pos_y), observation["stocks"][stock_idx_choice], stock_idx_choice)
             place = {"stock_idx": stock_idx_choice, "size": prod_size, "position": (pos_x, pos_y)}
             print(f'place: {place}')
+
+            self.area_used += prod["size"][0] * prod["size"][1]
+
+            print(1.0 - self.area_used / self.area_used_stock)
             return place 
 
     # Student code here
     # You can add more functions if needed
 
     # CURRENT OPTIMAL STRATEGY:
-    # Minimum local waste
-    # Maximum fitness level
-    # Sort by area
+    # Minimize local waste
+    # Stock sorted in size
+    # Rotate when it makes less waste area
+    # Product sorted by area
+    # Used more stock when needed
 
-    # Skyline is a set of 3-int tuple (x_start, x_end, height)
+    # Consider height ???
+    # Maximize fitness level ???
+
+    # Skyline is a set of 3-int tuple Skyline(x_start, x_end, height)
     class SkylinePart():
         def __init__(self, x_start, x_end, height) -> None:
             self.x_start = x_start
@@ -101,7 +121,12 @@ class Policy2310359(Policy):
     def init_skyline_set(self, stocks):
         # this will initialize the skyline set
         self.skylines = []
-        for i, stock in enumerate(stocks):
+
+        self.stocks = [(stock, i) for i, stock in enumerate(stocks)]
+        print(self.stocks[:10])
+        self.stocks = sorted(self.stocks, key= lambda x : -(self._get_stock_size_(x[0])[0] * self._get_stock_size_(x[0])[1]))
+
+        for stock, i in self.stocks:
             self.skylines += [[Policy2310359.SkylinePart(0, self._get_stock_size_(stock)[0], 0)]]
 
     def calculate_minimum_local_waste(self, product, stock, stock_idx):
@@ -115,6 +140,7 @@ class Policy2310359(Policy):
 
         waste_area = WONT_USE
         placement_choice = (-1, -1)
+        should_rotate = False
 
         # First, we try placing on the leftmost of each part of skyline
         for part_idx, part in enumerate(self.skylines[stock_idx]):
@@ -138,6 +164,7 @@ class Policy2310359(Policy):
             if waste_area > current_waste_area:
                 waste_area = current_waste_area
                 placement_choice = (pos_x, pos_y)
+                should_rotate = False
 
         # rightmost on each part (kinda similar)
         for part_idx, part in enumerate(self.skylines[stock_idx]):
@@ -162,8 +189,61 @@ class Policy2310359(Policy):
             if waste_area > current_waste_area:
                 waste_area = current_waste_area
                 placement_choice = (pos_x, pos_y)
+                should_rotate = False
+
+        ################ ROTATE OBJECT ########################
+        # First, we try placing on the leftmost of each part of skyline
+        prod_w, prod_h = prod_h, prod_w
+
+        for part_idx, part in enumerate(self.skylines[stock_idx]):
+            # now have to check validness
+            pos_x, pos_y = part.x_start, part.height
+
+            if pos_x < 0 or pos_x + prod_w > stock_w: continue
+            if pos_y < 0 or pos_y + prod_h > stock_h: continue
+            if not self._can_place_(stock, (pos_x, pos_y), (prod_w, prod_h)): continue
+            ok = True
+            for part in self.skylines[stock_idx]:
+                if part._intersect_((prod_w, prod_h), (pos_x, pos_y)):
+                    ok = False
+                    break
+            if not ok: continue
+
+            current_waste_area = 0
+            for each_part in self.skylines[stock_idx]:
+                current_waste_area += each_part._calculate_local_waste_((prod_w, prod_h), (pos_x, pos_y))
+
+            if waste_area > current_waste_area:
+                waste_area = current_waste_area
+                placement_choice = (pos_x, pos_y)
+                should_rotate = True
+
+        # rightmost on each part (kinda similar)
+        for part_idx, part in enumerate(self.skylines[stock_idx]):
+            # now have to check validness
+            pos_x, pos_y = part.x_end - prod_w, int(part.height)
+
+            if pos_x < 0 or pos_x + prod_w > stock_w: continue
+            if pos_y < 0 or pos_y + prod_h > stock_h: continue
+            if not self._can_place_(stock, (pos_x, pos_y), (prod_w, prod_h)): continue
+            ok = True
+            for part in self.skylines[stock_idx]:
+                if part._intersect_((prod_w, prod_h), (pos_x, pos_y)):
+                    ok = False
+                    break
+            
+            if not ok: continue
+
+            current_waste_area = 0
+            for each_part in self.skylines[stock_idx]:
+                current_waste_area += each_part._calculate_local_waste_((prod_w, prod_h), (pos_x, pos_y))
+
+            if waste_area > current_waste_area:
+                waste_area = current_waste_area
+                placement_choice = (pos_x, pos_y)
+                should_rotate = True
         
-        return int(waste_area), placement_choice
+        return int(waste_area), placement_choice, should_rotate
 
     def place_product(self, product, pos, stock, stock_idx):
         new_skyline = []
