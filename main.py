@@ -27,7 +27,7 @@ if __name__ == "__main__":
     #         ep += 1
 
     # Reset the environment
-    observation, info = env.reset(seed=42)
+    # observation, info = env.reset(seed=42)
 
     # Test RandomPolicy
     # rd_policy = RandomPolicy()
@@ -47,12 +47,15 @@ if __name__ == "__main__":
     print(info)
 
     policy2210xxx = Policy2310359()
-    for _ in range(200):
+    for _ in range(500):
         action = policy2210xxx.get_action(observation, info)
         observation, reward, terminated, truncated, info = env.step(action)
         print(info)
 
         if terminated or truncated:
+            break
             observation, info = env.reset()
 
+print('DONE!')
+while True: pass
 env.close()
