@@ -1,4 +1,5 @@
 import time
+import random
 
 from scipy.optimize import linprog
 import numpy as np
@@ -22,20 +23,15 @@ class Policy2033766(Policy):
 
         # Pre-generate feasible cutting patterns
         cutting_patterns = []
-        # s = time.time()
         for stock_idx, stock in enumerate(stocks):
             stock_w, stock_h = self._get_stock_size_(stock)
             for prod_idx, (prod_w, prod_h) in enumerate(product_sizes):
-                # pos_x, pos_y, new_prod_size = self._find_position(stock, (prod_w, prod_h))
-                # if None in [pos_x, pos_y, new_prod_size]:
-                #     continue
                 if stock_w >= prod_w and stock_h >= prod_h:
                     max_count = (stock_w // prod_w) * (stock_h // prod_h)
                     cutting_patterns.append((stock_idx, prod_idx, max_count))
                 elif stock_w >= prod_h and stock_h >= prod_w:
                     max_count = (stock_w // prod_h) * (stock_h // prod_w)
                     cutting_patterns.append((stock_idx, prod_idx, max_count))
-        # print(f"innit parameters {time.time() - s} - s")
         # Prepare LP components
         num_patterns = len(cutting_patterns)
         num_products = len(products)
@@ -49,9 +45,7 @@ class Policy2033766(Policy):
 
         # Solve LP problem
         bounds = [(0, None) for _ in range(num_patterns)]  # Relax to continuous
-        s = time.time()
         result = linprog(c, A_eq=A, b_eq=b, bounds=bounds, method="highs")
-        # print(f"Solving time {time.time() - s }")
 
         # Handle solution
         if result.success:
@@ -60,8 +54,6 @@ class Policy2033766(Policy):
             for idx in pattern_indexes:
                 stock_idx, prod_idx, _ = cutting_patterns[idx]
                 prod_w, prod_h = product_sizes[prod_idx]
-
-                # Find first available position in stock
                 stock = stocks[stock_idx]
                 pos_x, pos_y, new_pro_size = self._find_position(stock, (prod_w, prod_h))
                 if None not in [pos_x, pos_y]:
@@ -84,3 +76,70 @@ class Policy2033766(Policy):
                         return x, y, rotated_size
         return None, None, None
 
+
+class QLearningPolicy(Policy):
+    def __init__(self, action_size, num_stocks=100, stock_usage_levels=10, max_product_quantity=10):
+        self.num_stocks = num_stocks
+        self.stock_usage_levels = stock_usage_levels
+        self.max_product_quantity = max_product_quantity
+
+        self.state_size = num_stocks * stock_usage_levels * max_product_quantity  # Adjust based on observation
+        self.action_size = action_size
+        self.learning_rate = 0.1
+        self.discount_factor = 0.99
+        self.epsilon = 1.0
+        self.epsilon_decay = 0.995
+        self.epsilon_min = 0.01
+
+        # Initialize Q-table
+        self.q_table = np.zeros((self.state_size, action_size))
+
+    def get_action(self, observation, info):
+        # Extract the current state
+        state = self._extract_state(observation)
+
+        # Epsilon-greedy action selection
+        if random.random() < self.epsilon:
+            action = random.randint(0, self.action_size - 1)  # Explore
+        else:
+            action = np.argmax(self.q_table[state])  # Exploit
+        return self._action_to_env(action, observation)
+
+    def learn(self, state, action, reward, next_state, done):
+        # Update Q-value using the Q-learning formula
+        best_next_action = np.argmax(self.q_table[next_state])
+        td_target = reward + self.discount_factor * self.q_table[next_state][best_next_action] * (1 - done)
+        td_error = td_target - self.q_table[state][action]
+        self.q_table[state][action] += self.learning_rate * td_error
+
+        # Decay epsilon
+        if done:
+            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
+    def _extract_state(self, observation):
+        # Encode stocks into discrete levels of usage
+        stock_levels = [
+            int(np.sum(stock) / (stock.shape[0] * stock.shape[1]) * self.stock_usage_levels)
+            for stock in observation["stocks"]
+        ]
+
+        # Encode products into remaining quantities
+        product_quantities = [
+            min(prod["quantity"], self.max_product_quantity)
+            for prod in observation["products"]
+        ]
+
+        # Combine stock levels and product quantities
+        state_vector = stock_levels + product_quantities
+
+        # Hash the combined state to a discrete value
+        state_hash = hash(tuple(state_vector)) % self.state_size
+        return state_hash
+
+    def _action_to_env(self, action, observation):
+        # Map action index to stock and product placement
+        stock_idx = action // len(observation["products"])
+        product_idx = action % len(observation["products"])
+        prod_size = observation["products"][product_idx]["size"]
+        pos_x, pos_y = 0, 0  # Placeholder logic for position selection
+        return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
