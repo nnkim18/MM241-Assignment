@@ -43,16 +43,18 @@ if __name__ == "__main__":
 
     # Uncomment the following code to test your policy
     # # Reset the environment
-    # observation, info = env.reset(seed=42)
-    # print(info)
+    print("student")
+    observation, info = env.reset(seed=42)
 
-    # policy2210xxx = Policy2210xxx()
-    # for _ in range(200):
-    #     action = policy2210xxx.get_action(observation, info)
-    #     observation, reward, terminated, truncated, info = env.step(action)
-    #     print(info)
+    policy2210xxx = Policy2210xxx(policy_id=1)
+    ep = 0
+    while ep < NUM_EPISODES:
+        action = policy2210xxx.get_action(observation, info)
+        observation, reward, terminated, truncated, info = env.step(action)
+        print(info)
 
-    #     if terminated or truncated:
-    #         observation, info = env.reset()
+        if terminated or truncated:
+            observation, info = env.reset(seed=ep)
+            ep += 1
 
 env.close()
