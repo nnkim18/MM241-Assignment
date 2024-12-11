@@ -28,12 +28,12 @@ class Policy2210xxx(Policy):
                 self.stock_products = [[] for _ in range(len(stocks))]
                 self.check = True  
                 self.stocks = stocks[:] 
-            # Pick a product that has quality > 0
+            
             for prod in list_prods:
                 if prod["quantity"] > 0:
                     prod_size = prod["size"]
                     placed = False
-                    # Loop through all stocks
+                    
                     for i, stock in enumerate(observation["stocks"]):
                         stock_w, stock_h = self._get_stock_size_(stock)
                         prod_w, prod_h = prod_size
@@ -43,7 +43,6 @@ class Policy2210xxx(Policy):
                                 for y in range(stock_h - prod_h + 1):
                                     if self._can_place_(stock, (x, y), prod_size):
                                         pos_x, pos_y = x, y
-                                        print("khong xoay")
                                         placed = True
                                         break
                                 if pos_x is not None and pos_y is not None:
@@ -58,7 +57,6 @@ class Policy2210xxx(Policy):
                                 for y in range(stock_h - prod_w + 1):
                                     if self._can_place_(stock, (x, y), prod_size[::-1]):
                                         prod_size = prod_size[::-1]
-                                        print("xoay")
                                         placed = True
                                         pos_x, pos_y = x, y
                                         break
@@ -110,7 +108,6 @@ class Policy2210xxx(Policy):
                                     if self._can_place_(stock, (x, y), prod_size):                                    
                                         leftover_space = (stock_w - prod_w) * (stock_h - prod_h)
                                         if leftover_space < min_leftover_space:
-                                            print("khong xoay")
                                             min_leftover_space = leftover_space
                                             best_fit = (stock_idx, (x, y))
                         if stock_w >= prod_h and stock_h >= prod_w:
@@ -141,10 +138,10 @@ class Policy2210xxx(Policy):
     def print_stocks(self):
         print("First Stocks with Products:")
 
-        # Loop through the stock_products list
+        
         for i, products in enumerate(self.stock_products):
             if len(products) > 0:
-                stock = self.stocks[i]  # Get the stock from the current index
+                stock = self.stocks[i]  
                 stock_w, stock_h = self._get_stock_size_(stock)
                 total_stock_area = stock_w * stock_h
                 total_product_area = sum(prod["size"][0] * prod["size"][1] * prod["quantity"] for prod in products)
@@ -162,5 +159,3 @@ class Policy2210xxx(Policy):
 
                 print("-" * 30)
 
-    # Student code here
-    # You can add more functions if needed
