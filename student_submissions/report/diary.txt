@@ -1,0 +1,84 @@
+﻿Mathematical modeling - TN01 
+Group 104
+Instructors: Nguyễn An Khương
+
+Group members: 
+Bùi Ngọc Minh - 2312046 (Leader)
+Lê Trọng Thiện - 2313233
+Phạm Lê Tiến Đạt - 2310687
+Lương Minh Thuận - 2313348
+Nguyễn Đăng Hiên - 2310936
+
+Working log / Diary:
+
+Week 45: 
+        Main goal: Discussion of the topic and dividing the work between members
+        What has achieved: 
+                - Discussion about how to formalize the problem to a ILP, mainly the goal of the cost function
+                - Split the group into 2 segments to do research more efficiently: 
+                        Minh Thuận and Đăng Hiên → do reinforcement learning
+                        Trọng Thiện and Tiến Đạt → do a heuristic method
+                        Ngọc Minh → researches how to formalize the problem further
+                - Additionally, we also split the work in the long term
+                        Ngọc Minh and Đăng Hiên → do Latex
+                        Tiến Đạt, Trọng Thiện and Minh Thuận → implement the policies in python
+
+
+Week 46:
+        Main goal: 
+                - Discussion of the formulation of the problem into a ILP
+                - Discussion on heuristic approaches to the problem
+                - Discussion on progress
+        What has achieved
+                - Thuận has built a general framework for Reinforcement learning and shares his github with the group, although bugs still exist
+                - Ngọc Minh has done the formulation of the problem into a ILP, including an approach involving column generation and discussed it with the group
+                - Thiện and Đạt agreed on a variant of the greedy approach to the 2D knapsack problem and by extension, this problem, we recursively generates a new pattern based on picking an item → grade it → find the best item with the best grade to fit into the sheet. The group agreed on two suggestions for the grading function, that is to 
+                        1. Pick the largest piece
+                        2. Pick the best piece to fit the remaining space
+                - Work on the latex file is semi complete, with the formulation, the abstract and the acknowledgement done by Ngọc Minh. Further work is discussed and more latex work will be divided between Minh and Hiên
+                - The group agrees to further progress what they have built code wise and find a better heuristic later down the line
+
+
+Week 47:
+        Main goal:
+                - Discussion about works that have been done
+                - Discussion of the RL networks and policies
+                - Discussion of more heuristics to implement
+        What has achieved
+                - Discussion about RL networks, improved from the version that only uses Linear neural networks to Convolution based neural networks with the drawwbacks being slower runtime in exchanged for better accuracy and environmental adaptations. The group did discuss how to improve, Minh suggested increasing the learning step and Thuận proposed that instead of making the network choose the item and its position, we only let it choose the position of the item while the task of choosing the item and the stock is handled by a heuristic.
+                - Thiện has completed the first fit and best fit policy
+                - The group agrees that we need to implement more heuristics. One creative direction the group agreed on was to combine existing methods. The group agreed on implementing a modified simplex algorithm based on the theory formulation of the problem into an ILP. We generate a set J of cutting arrangements using first fit on available stocks then uses simplex to optimize the choice of cutting arrangements. Đạt will be the one who will code this algorithm.
+                - The latex work on algorithm description will be focused on RL for the next week.
+                - Hiên suggested adding illustrations and examples to the formulation section for better clarity.
+                - The group agrees on testing the policies on testing sets. Yet finds it challenging since the problem rarely has an optimal solution and has few testing sets online.
+
+
+Week 48:
+        Main goal: 
+                - Further discussion on RL networks and policies
+                - Finalizing many parts of the report
+                - Discussion on the results of training the neural network for RL
+        What has achieved:
+                - Thiện improved upon the first fit heuristic by proposing a mixxed implementation between first fit and best fit.
+                - Minh and Hiên finalized the report section on the formulation of the problem into an ILP, there were holes and flaws with the last version of the formulation that makes it not very precise and the report section on the theory behind RL, PPO and the group’s newly improved heuristic.
+                - Early in the week, the group agreed on adding additional rewards for the RL agent, increasing it a little in inverse proportion to how low the coordinates of the item is.
+                - Thuận reported at the end of the week that the RL network has gotten quite good at placing the items and no long place them in the middle of the stock compared to the start, gaps between items are also decreased.
+
+
+Week 49:
+        Main goal: 
+                - Continue finalizing the reports
+                - Fixing up some algorithms and policies due to the recent information that items are rotatable
+        What has achieved:
+                - Đạt discussed the challenge of adapting the simplex method to solve the problem heuristically, there were open discussions about the code and how to adapt the simplex output to a meaningful action for a policy. The group concluded however this approach is too near the deadline to improve more and instead opted to not output this method as a policy and only uses it as a comparison point.
+                - Thiện fixxed the group’s combination heuristic to allow for item rotation
+                - Added pictures and diagrams to the report, to visualize data make it more understandable.
+                - Updated the bibliography section of the report to use the correct format
+
+
+Week 50:
+         Main goal: 
+                - Finalizing everyone's work, fixxing mistakes and submit
+        What has achieved:
+                - Benchmark the algorithms on a random set of environments against the provided greedy policy. The result shows that combination heuristic performed the best, followed by the trained RL agent
+                - Added a case study section to the report based on real-world data from a stone cutting company, tested the result against an online tool "opticutter". The result shows that our best alogrithm's results provided a lower stock count while the online tool povided a lower waste rate.
