@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 
-def _compute_filled_ratio(stocks):
+def compute_filled_ratio(stocks):
     stocks_array = np.array(stocks)
     usable_area = np.sum(stocks_array == -1, axis=(1, 2))
     filled_area = np.sum(stocks_array > -1, axis=(1, 2))
@@ -24,9 +24,18 @@ def get_number_of_used_stocks(stocks):
     return sum(filled_area > 0)
 
 
+def compute_wasted_ratio(stocks):
+    stocks_array = np.array(stocks)
+    unused_area = np.sum(stocks_array == -1, axis=(1, 2))
+    filled_area = np.sum(stocks_array > -1, axis=(1, 2))
+    used_idx = filled_area > 0
+    wasted_ratios = 1.0 - filled_area[used_idx] / (filled_area[used_idx] + unused_area[used_idx])
+    return np.average(wasted_ratios)
+
+
 class MLModel:
     # Directory to save the model
-    model_dir = "saved_models"
+    model_dir = "student_submissions/saved_models"
     model_file = os.path.join(model_dir, "q_table.npy")
     metatdata_file = os.path.join(model_dir, "metadata.npy")
 
