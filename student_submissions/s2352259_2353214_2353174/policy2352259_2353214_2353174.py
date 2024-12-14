@@ -1,7 +1,7 @@
 import numpy as np
 from policy import Policy
 
-class Policy2352259(Policy):
+class Policy2352259_2353214_2353174(Policy):
     def __init__(self, policy_id=1):
         self.policy_id = policy_id
         self.skylines = {}
