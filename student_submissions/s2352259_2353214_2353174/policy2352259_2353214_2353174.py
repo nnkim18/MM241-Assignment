@@ -177,7 +177,7 @@ class Policy2352259_2353214_2353174(Policy):
         waste_score = 1.0 - (waste_area / (stock_w * stock_h))
         contact_score = contact / (4 * (w + h))  # Adjusted normalization
         
-        # Combined score with balance
+
         return (
             0.5 * waste_score + 
             0.3 * contact_score +
