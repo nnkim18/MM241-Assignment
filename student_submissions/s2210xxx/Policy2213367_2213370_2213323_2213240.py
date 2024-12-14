@@ -102,3 +102,65 @@ class Policy2213367_2213370_2213323_2213240(Policy):
         # If no valid product is found, return a default action
         return {"stock_idx": -1, "size": [0, 0], "position": (0, 0)}
 
+    def _find_bottom_left_position(self, stock, prod_size, stock_w, stock_h):
+        """
+        Tìm vị trí thấp nhất và gần bên trái nhất để đặt sản phẩm.
+        """
+        prod_w, prod_h = prod_size
+        best_position = None
+        best_y = stock_h  
+
+        for pos_x in range(stock_w - prod_w + 1):  
+            for pos_y in range(stock_h - prod_h + 1):  
+                
+                if self._can_place_(stock, (pos_x, pos_y), prod_size):
+                    if pos_y < best_y or (pos_y == best_y and pos_x < best_position[0]):
+                        best_position = (pos_x, pos_y)
+                        best_y = pos_y
+        return best_position  
+    
+    #Bottom Left algorithm
+    def _find_bottom_left_position(self, stock, prod_size, stock_w, stock_h):
+        """
+        Tìm vị trí thấp nhất và gần bên trái nhất để đặt sản phẩm.
+        """
+        prod_w, prod_h = prod_size
+        best_position = None
+        best_y = stock_h  
+
+        for pos_x in range(stock_w - prod_w + 1):  
+            for pos_y in range(stock_h - prod_h + 1):  
+                
+                if self._can_place_(stock, (pos_x, pos_y), prod_size):
+                    if pos_y < best_y or (pos_y == best_y and pos_x < best_position[0]):
+                        best_position = (pos_x, pos_y)
+                        best_y = pos_y
+        return best_position  
+
+
+    def _bottom_left_action(self, observation, info):
+        """
+        Thực hiện thuật toán Bottom-Left để đặt sản phẩm lên các kho.
+        """
+        list_prods = observation["products"]  
+        stocks = observation["stocks"]       
+
+        list_prods = sorted(list_prods, key=lambda prod: prod["size"][0] * prod["size"][1], reverse=True)
+
+        for prod_idx, prod in enumerate(list_prods):
+            if prod["quantity"] > 0:  
+                prod_size = prod["size"]  
+                for stock_idx, stock in enumerate(stocks):
+                    
+                    stock_w, stock_h = self._get_stock_size_(stock)
+                    prod_w, prod_h = prod_size
+
+                    position = self._find_bottom_left_position(stock, prod_size, stock_w, stock_h)
+                    if position is not None:
+                        return {"stock_idx": stock_idx, "size": prod_size, "position": position}
+
+                    position = self._find_bottom_left_position(stock, prod_size[::-1], stock_w, stock_h)
+                    if position is not None:
+                        return {"stock_idx": stock_idx, "size": prod_size[::-1], "position": position}
+
+        return {"stock_idx": -1, "size": [0, 0], "position": (0, 0)}
