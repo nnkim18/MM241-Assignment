@@ -2,7 +2,7 @@ from policy import Policy
 import numpy as np
 from scipy.optimize import linprog
 
-class Policy2352964_2353087_2352373_2350006_2353103(Policy):
+class Policy2210xxx(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
@@ -82,193 +82,155 @@ class VeryGreedy(Policy):
             "position": (position_x, position_y)
         }
 
-
 class ColumnGeneration(Policy):
     def __init__(self):
-        self.current_patterns = []
-        self.dual_values = []
-        self.demands = None
-        self.stock_size = None
-        self.num_products = 0
-        self.epsilon = 1e-6
-        self.action_queue = []
-        self.master_solution = None
-        self.stock_idx = -1
-        self.check_100 = False
-        self.last_check = False
-        self.stock_placed = []
+        super().__init__()
+        self.pattern_catalog = []
+        self.processed_patterns = set()
+        self.current_stock_idx = 0
+        self.occupied_positions = {}
+        self.game_started = False
 
-    def _get_stock_size_(self, stock):
-        stock = np.atleast_2d(stock)
-        stock_w = np.sum(np.any(stock != -2, axis=1))
-        stock_h = np.sum(np.any(stock != -2, axis=0))
-        return stock_w, stock_h
+    def reset_planner(self):
+        self.pattern_catalog.clear()
+        self.processed_patterns.clear()
+        self.current_stock_idx = 0
+        self.occupied_positions.clear()
+        self.game_started = False
 
-    def _can_place_(self, stock, position, size):
-        xi, yi = position
-        w, h = size
-        stock_w, stock_h = stock.shape
-        if xi + w > stock_w or yi + h > stock_h:
-            return False
-        return np.all(stock[xi:xi+w, yi:yi+h] == -1)
+    def create_patterns(self, products, stock_size):
+        """Generate possible cutting patterns based on available products and stock size."""
+        sorted_products = sorted(
+            enumerate(products),
+            key=lambda x: x[1]['size'][0] * x[1]['size'][1],
+            reverse=True
+        )
+        pattern_list = []
 
-    def _solve_master_problem(self, demand_vector):
-        num_patterns = len(self.current_patterns)
-        cvec = np.ones(num_patterns)
-        A_eq = np.zeros((self.num_products, num_patterns))
+        for idx, product in sorted_products:
+            if product['quantity'] > 0:
+                stock_w, stock_h = stock_size
+                prod_w, prod_h = product['size']
 
-        for j, pattern in enumerate(self.current_patterns):
-            A_eq[:, j] = pattern['counts']
+                if prod_w > stock_w or prod_h > stock_h:
+                    continue
 
-        result = linprog(cvec, A_eq=A_eq, b_eq=demand_vector, method='highs', bounds=(0, None))
+                pattern = [0] * len(products)
+                max_pieces_w = stock_w // prod_w
+                max_pieces_h = stock_h // prod_h
+                total_pieces = min(product['quantity'], max_pieces_w * max_pieces_h)
 
-        if result.success:
-            self.dual_values = result["eqlin"]["marginals"]
-            self.master_solution = result["x"]
-        else:
-            raise ValueError("Master problem did not converge.")
-
-    def _solve_subproblem(self):
-        unit_values = [
-            (self.dual_values[i] / (product["size"][0] * product["size"][1]) if product["size"][0] * product["size"][1] > 0 else 0, i)
-            for i, product in enumerate(self.demands)
-        ]
-        unit_values.sort(key=lambda x: x[0], reverse=True)
-
-        stock = np.full(self.stock_size, fill_value=-1, dtype=int)
-        counts = np.zeros(self.num_products, dtype=int)
-        placements = []
-
-        for unit_value, i in unit_values:
-            product = self.demands[i]
-            w_i, h_i = product["size"]
-            quantity_i = product["quantity"]
-            orientations = [(w_i, h_i), (h_i, w_i)] if w_i != h_i else [(w_i, h_i)]
-
-            for _ in range(quantity_i - counts[i]):
-                placed = False
-                for w, h in orientations:
-                    for xi in range(self.stock_size[0] - w + 1):
-                        for yi in range(self.stock_size[1] - h + 1):
-                            if self._can_place_(stock, (xi, yi), (w, h)):
-                                stock[xi:xi+w, yi:yi+h] = i
-                                placements.append((i, xi, yi, w, h))
-                                counts[i] += 1
-                                placed = True
-                                break
-                        if placed:
-                            break
-                    if placed:
-                        break
-                if not placed:
-                    break
-
-        reduced_cost = 1 - np.dot(self.dual_values, counts)
-        return {
-            'counts': counts,
-            'placements': placements,
-            'unit_values': unit_values
-        } if reduced_cost < -self.epsilon else None
+                if total_pieces > 0:
+                    pattern[idx] = total_pieces
+                    pattern_list.append(pattern)
+        return pattern_list
 
     def get_action(self, observation, info):
-        while True:
-            if self.action_queue:
-                return self.action_queue.pop(0)
+        """Determine the next action based on the current observation."""
+        if not self.game_started:
+            self.reset_planner()
+            self.game_started = True
 
-            # Adjust stock index
-            self._adjust_stock_idx()
+        stocks = observation["stocks"]
+        products = observation["products"]
 
-            self.current_patterns.clear()
-            stock_list = sorted(enumerate(observation["stocks"]), key=lambda x: self._get_stock_size_(x[1])[0] * self._get_stock_size_(x[1])[1], reverse=False)
-            self.demands = observation["products"]
-            self.num_products = len(self.demands)
-            demands_vector = np.array([product["quantity"] for product in self.demands])
+        remaining_items = sum(product["quantity"] for product in products)
+        if remaining_items == 0:
+            return {
+                "stock_idx": -1,
+                "size": [0, 0],
+                "position": [0, 0]
+            }
 
-            # Initialize patterns if empty
-            if not self.current_patterns:
-                self._initialize_patterns()
+        sorted_stocks = sorted(
+            enumerate(stocks),
+            key=lambda x: self.calculate_stock_area(x[1]),
+            reverse=True
+        )
 
-            # Kiểm tra xem stock_list có phần tử không
-            if len(stock_list) == 0:
-                return {'stock_idx': -1, 'size': [0, 0], 'position': [0, 0]}
+        sorted_products = sorted(
+            enumerate(products),
+            key=lambda x: x[1]['size'][0] * x[1]['size'][1],
+            reverse=True
+        )
 
-            # Giới hạn stock_idx trong phạm vi hợp lệ
-            self.stock_idx = min(self.stock_idx, len(stock_list) - 1)
+        while self.current_stock_idx < len(sorted_stocks):
+            stock_idx, _ = sorted_stocks[self.current_stock_idx]
+            if stock_idx not in self.occupied_positions:
+                self.occupied_positions[stock_idx] = set()
 
-            # Kiểm tra nếu stock_idx hợp lệ
-            if self.stock_idx < 0 or self.stock_idx >= len(stock_list):
-                return {'stock_idx': -1, 'size': [0, 0], 'position': [0, 0]}
+            stock_size = self.extract_stock_dimensions(stocks[stock_idx])
 
-            self.stock_size = self._get_stock_size_(stock_list[self.stock_idx][1])
+            if not self.pattern_catalog:
+                self.pattern_catalog = self.create_patterns(products, stock_size)
+                self.processed_patterns.clear()
 
-            stockidxreturn = stock_list[self.stock_idx][0]
+            pattern_found = False
+            for pattern_idx, pattern in enumerate(self.pattern_catalog):
+                if pattern_idx not in self.processed_patterns:
+                    for prod_idx, count in enumerate(pattern):
+                        if count > 0 and products[prod_idx]["quantity"] > 0:
+                            valid_positions = self.identify_valid_positions(
+                                stocks[stock_idx],
+                                products[prod_idx]["size"]
+                            )
+                            if valid_positions:
+                                for pos in valid_positions:
+                                    position_key = (*pos, *products[prod_idx]["size"])
+                                    if position_key not in self.occupied_positions[stock_idx]:
+                                        self.occupied_positions[stock_idx].add(position_key)
+                                        # Decrease product quantity
+                                        products[prod_idx]["quantity"] -= 1
+                                        self.processed_patterns.add(pattern_idx)
+                                        return {
+                                            "stock_idx": stock_idx,
+                                            "size": products[prod_idx]["size"],
+                                            "position": pos
+                                        }
+                    self.processed_patterns.add(pattern_idx)
+            if not pattern_found:
+                self.current_stock_idx += 1
+                self.pattern_catalog = []
+        # If no valid actions are found, return no-op action
+        return {
+            "stock_idx": -1,
+            "size": [0, 0],
+            "position": [0, 0]
+        }
 
-            while True:
-                self._solve_master_problem(demands_vector)
-                new_pattern = self._solve_subproblem()
-                if new_pattern is None:
-                    break
-                self.current_patterns.append(new_pattern)
+    def identify_valid_positions(self, stock, product_size):
+        """Find all valid positions where a product can be placed on a stock."""
+        stock_w, stock_h = self.extract_stock_dimensions(stock)
+        prod_w, prod_h = product_size
+        positions = []
 
-            x = self.master_solution
-            if x is None or x.size == 0:
-                return {'stock_idx': -1, 'size': [0, 0], 'position': [0, 0]}
+        for x in range(stock_w - prod_w + 1):
+            for y in range(stock_h - prod_h + 1):
+                if self.is_placeable(stock, (x, y), product_size):
+                    positions.append((x, y))
+        return positions
 
-            Area_array = np.array([sum(self.demands[j]["size"][0] * self.demands[j]["size"][1] * self.current_patterns[i]["counts"][j] for j in range(self.num_products)) for i in range(len(self.current_patterns))])
+    def is_placeable(self, stock, position, product_size):
+        """Check if a product can be placed at the given position on the stock."""
+        x_start, y_start = position
+        w, h = product_size
+        stock_w, stock_h = stock.shape
 
-            pattern_idx = np.argmax(Area_array)
-            a = Area_array[pattern_idx] / (self.stock_size[0] * self.stock_size[1])
-            selected_pattern = self.current_patterns[pattern_idx]
-            placements = selected_pattern["placements"]
-            self.action_queue.clear()
-
-            if not self._should_generate_action(a, placements):
-                continue
-
-            self.stock_placed.append(self.stock_idx)
-            for placement in placements:
-                i, xi, yi, w, h = placement
-                self.action_queue.append({
-                    "stock_idx": stockidxreturn,
-                    "size": [w, h],
-                    "position": [xi, yi]
-                })
-
-            if self.action_queue:
-                return self.action_queue.pop(0)
-            else:
-                return {'stock_idx': -1, 'size': [0, 0], 'position': [0, 0]}
-
-    def _adjust_stock_idx(self):
-        if self.stock_idx in self.stock_placed and not self.last_check and self.check_100:
-            self.stock_idx -= 1
-        elif self.stock_idx in self.stock_placed and self.last_check and self.check_100:
-            self.stock_idx += 1
-
-        if self.stock_idx == 99:
-            self.check_100 = True
-        if not self.check_100:
-            self.stock_idx += 1
-        elif self.check_100:
-            self.stock_idx = self.stock_idx + 1 if self.last_check else self.stock_idx - 1
-
-    def _initialize_patterns(self):
-        for i in range(self.num_products):
-            counts = np.zeros(self.num_products, dtype=int)
-            counts[i] = 1
-            placements = [(i, 0, 0, self.demands[i]["size"][0], self.demands[i]["size"][1])]
-            self.current_patterns.append({
-                'counts': counts,
-                'placements': placements,
-                'unit_values': [0]
-            })
-
-    def _should_generate_action(self, a, placements):
-        if a < 0.9 and not self.check_100 and not self.last_check:
+        if x_start + w > stock_w or y_start + h > stock_h:
             return False
-        elif a < 0.8 and self.check_100 and not self.last_check:
-            return False
-        return bool(placements)
+        return np.all(stock[x_start:x_start+w, y_start:y_start+h] == -1)
+
+    def extract_stock_dimensions(self, stock):
+        """Extract the usable width and height of the stock."""
+        stock_array = np.atleast_2d(stock)
+        width = stock_array.shape[0]
+        height = stock_array.shape[1]
+        return width, height
+
+    def calculate_stock_area(self, stock):
+        """Calculate the usable area of the stock."""
+        width, height = self.extract_stock_dimensions(stock)
+        return width * height
 
 
 
