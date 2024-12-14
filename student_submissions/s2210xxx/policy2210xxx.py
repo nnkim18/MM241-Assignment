@@ -13,7 +13,7 @@ class Rectangle:
         self.height = height
         self.quantity = quantity
 
-
+        
 class Policy2033766_2033525(Policy):
     def __init__(self, policy_id=1):
         super().__init__()
