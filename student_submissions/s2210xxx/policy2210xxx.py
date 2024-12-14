@@ -5,6 +5,10 @@ class Level:
     def __init__(self, height, pos):
         self.height = height
         self.pos = pos
+        self.length = 0
+
+    def place_product(self, product_width: int) -> None:
+        self.length += product_width
 
 
 class Stock:
@@ -16,7 +20,7 @@ class Stock:
         self.is_new_level: bool = True
         self.is_full: bool = False
 
-    def can_create_new_level(self, products, indices) -> bool:
+    def can_add_new_level(self, products, indices) -> bool:
         used_height = sum(level.height for level in self.levels)
         for idx in indices:
             prod = products[idx]
@@ -32,7 +36,7 @@ class Stock:
         current_level = self.levels[-1]
         return current_level.pos + current_level.height + product_height <= self.height
 
-    def create_new_level(self, height: int) -> None:
+    def add_new_level(self, height: int) -> None:
         if not self.levels:
             new_pos = 0
         else:
@@ -55,13 +59,12 @@ class StockManager:
     def stock_indices(self) -> tuple[int, ...]:
         return tuple(stock.index for stock in self.stocks)
 
-    def get_stock(self) -> Stock:
+    def get_most_recent_stock(self) -> Stock:
         return self.stocks[-1]
 
 
 class Policy2210xxx(Policy):
-    def __init__(self, policy_id: int = 1, log: bool = False):
-        self.log = log
+    def __init__(self, policy_id: int = 1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
         # Student code here
@@ -85,6 +88,9 @@ class Policy2210xxx(Policy):
         indices = sorted(range(len(products)),
                          key=lambda i: products[i]["size"][1], reverse=True)
         return tuple(indices)
+
+    def can_reset(self, products) -> bool:
+        return sum(prod["quantity"] for prod in products) == 1
 
     def reset(self):
         self.stock_manager = StockManager()
@@ -114,7 +120,8 @@ class Policy2210xxx(Policy):
                     index=idx, width=stock_w, height=stock_h, levels=())
                 self.stock_manager.add_stock(my_stock)
             else:
-                my_stock: Stock = self.stock_manager.get_stock()
+                # Get the most recent stock
+                my_stock: Stock = self.stock_manager.get_most_recent_stock()
                 if idx != my_stock.index:
                     i += 1
                     continue
@@ -139,19 +146,40 @@ class Policy2210xxx(Policy):
                         # Check if the product can be placed in the new level
                         # If yes, initialize the new level
                         if my_stock.can_place(prod_h):
-                            my_stock.create_new_level(prod_h)
+                            my_stock.add_new_level(prod_h)
+                            current_level = my_stock.get_current_level()
                             my_stock.is_new_level = False
-                        else:
+                            pos_x, pos_y = 0, current_level.pos
+                            current_level.place_product(prod_w)
+                            break
+                        # Try stock rotation
+                        elif my_stock.can_place(prod_w):
+                            my_stock.add_new_level(prod_w)
+                            current_level = my_stock.get_current_level()
+                            my_stock.is_new_level = False
+                            pos_x, pos_y = 0, current_level.pos
+                            current_level.place_product(prod_h)
+                            prod_size = prod_size[::-1]
+                            break
+                        else:  # If the product cannot be placed in the new level, move to the next product
                             j += 1
                             continue
 
                     current_level = my_stock.get_current_level()
                     # Check if the product can be placed in the current level
-                    if prod_h <= current_level.height:
-                        for x in range(stock_w - prod_w + 1):
-                            if self._can_place_(stock, (x, current_level.pos), prod_size):
-                                pos_x, pos_y = x, current_level.pos
-                                break
+                    if prod_h <= current_level.height and prod_w + current_level.length <= stock_w:
+                        if prod_w > prod_h and prod_w <= current_level.height and prod_h + current_level.length <= stock_w:
+                            pos_x, pos_y = current_level.length, current_level.pos
+                            current_level.place_product(prod_h)
+                            prod_size = prod_size[::-1]
+                        else:
+                            pos_x, pos_y = current_level.length, current_level.pos
+                            current_level.place_product(prod_w)
+                    # Try stock rotation
+                    elif prod_w <= current_level.height and prod_h + current_level.length <= stock_w:
+                        pos_x, pos_y = current_level.length, current_level.pos
+                        current_level.place_product(prod_h)
+                        prod_size = prod_size[::-1]
                     # Move to the next product if the item cannot be placed in the current level
                     else:
                         j += 1
@@ -170,24 +198,11 @@ class Policy2210xxx(Policy):
 
             # If no product can be placed in the stock, continue to process
             # If the level does not reach the stock's height, move to the next level
-            if my_stock.can_create_new_level(products, sorted_products_indices):
+            if my_stock.can_add_new_level(products, sorted_products_indices):
                 my_stock.is_new_level = True
-                continue
+            else:
+                i += 1  # Move to the next stock if cannot create a new level
 
-            # If the level reaches the stock's height, move to the next stock
-            # Reset the level-related variables for the next stock
-            i += 1
-
-        if self.log:
-            print("-" * 50)
-            print(
-                f"Stock index: {stock_idx} - Stock size: {stock_w}x{stock_h}")
-            print(
-                f"Incoming product: {prod_size} - Position: ({pos_x}, {pos_y})")
-            # print(
-            #     f"Current level: {self.level_pos} - Level height: {self.level_h}")
-        if stock_idx == -1:
-            print(observation["products"])
-            raise Exception("No action is taken")
-
+        if self.can_reset(products):
+            self.reset()
         return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
