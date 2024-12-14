@@ -1,5 +1,6 @@
 import numpy as np
 from policy import Policy
+
 class Policy2352259(Policy):
     def __init__(self, policy_id=1):
         self.policy_id = policy_id
@@ -114,6 +115,17 @@ class Policy2352259(Policy):
                     
         return positions
 
+    def _can_place_(self, stock, position, size):
+        x, y = position
+        w, h = size
+        stock_w, stock_h = self._get_stock_size_(stock)
+        # Check if the placement is within bounds
+        if x + w > stock_w or y + h > stock_h:
+            return False
+        # Check for overlap with existing placements
+        area = stock[x:x+w, y:y+h]
+        return np.all(area == -1)
+    
     def _update_skyline(self, stock_idx, action):
         x, y = action["position"]
         w, h = action["size"]
@@ -270,47 +282,52 @@ class Policy2352259(Policy):
         stock[x : x + w, y : y + h] = prod_idx  # Simulate placement
 
     def _calculate_placement_score(self, stock):
-        # Calculate filled area
-        if 'filled_area' not in self.__dict__:
-            self.filled_area = np.sum(stock >= 0)
-        else:
-            self.filled_area += 1  # Adjust based on actual placement size
+        # Calculate filled area based on the current stock state
+        self.filled_area = np.sum(stock >= 0)
 
+        # Get stock dimensions
         stock_w, stock_h = self._get_stock_size_(stock)
-        total_area = stock_w * stock_h
-        utilization = self.filled_area / total_area if total_area > 0 else 0
+        total_area = stock_w * stock_h if stock_w and stock_h else 1
+
+        # Calculate utilization as the ratio of filled area to total area
+        utilization = self.filled_area / total_area
 
         # Fragmentation Penalty
-        fragmented = (stock == -1) & (
-            (np.roll(stock, 1, axis=0) == -1) |
-            (np.roll(stock, -1, axis=0) == -1) |
-            (np.roll(stock, 1, axis=1) == -1) |
-            (np.roll(stock, -1, axis=1) == -1)
-        )
-        fragmented_cells = np.sum(fragmented)
-        fragmentation_penalty = fragmented_cells / total_area if total_area > 0 else 0
+        # Identify empty cells that are completely enclosed by occupied cells
+        empty_cells = (stock == -1).astype(int)
+        occupied_cells = (stock >= 0).astype(int)
 
-        # Contact Scoring using vectorized operations
-        occupied = (stock >= 0).astype(int)
+        # Pad the array to handle edge cases without wrap-around
+        padded_empty = np.pad(empty_cells, pad_width=1, mode='constant', constant_values=0)
+        neighbor_counts = sum(
+            np.roll(np.roll(padded_empty, dx, axis=0), dy, axis=1)
+            for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]
+        )[1:-1, 1:-1]
 
-        # Shift in four directions: up, down, left, right
-        contact_up = np.roll(occupied, 1, axis=0)
-        contact_down = np.roll(occupied, -1, axis=0)
-        contact_left = np.roll(occupied, 1, axis=1)
-        contact_right = np.roll(occupied, -1, axis=1)
+        # Cells surrounded by occupied cells in all four directions
+        fragmented_cells = (empty_cells == 1) & (neighbor_counts == 0)
+        fragmented_cell_count = np.sum(fragmented_cells)
+        fragmentation_penalty = fragmented_cell_count / total_area
 
-        # Prevent wrap-around by zeroing the borders
-        contact_up[0, :] = 0
-        contact_down[-1, :] = 0
-        contact_left[:, 0] = 0
-        contact_right[:, -1] = 0
+        # Contact Scoring
+        # Each occupied cell can have up to 4 contacts (up, down, left, right)
+        shifts = [(-1,0), (1,0), (0,-1), (0,1)]
+        contact_total = 0
+        for dx, dy in shifts:
+            shifted = np.roll(np.roll(occupied_cells, dx, axis=0), dy, axis=1)
+            # Zero out the borders to prevent wrap-around effects
+            if dx == -1:
+                shifted[-1, :] = 0
+            if dx == 1:
+                shifted[0, :] = 0
+            if dy == -1:
+                shifted[:, -1] = 0
+            if dy == 1:
+                shifted[:, 0] = 0
+            contact_total += occupied_cells * shifted
 
-        # Total contacts per cell
-        total_contacts = contact_up + contact_down + contact_left + contact_right
-        contact_score = np.sum(total_contacts * occupied)
-
-        # Normalize contact score
-        max_contacts = 4 * self.filled_area if self.filled_area > 0 else 1
+        contact_score = np.sum(contact_total)
+        max_contacts = 4 * self.filled_area  # Each cell can have up to 4 contacts
         normalized_contact = contact_score / max_contacts if max_contacts > 0 else 0
 
         # Combined score with weights
