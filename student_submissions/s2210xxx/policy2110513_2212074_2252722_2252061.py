@@ -37,18 +37,16 @@ class Policy2110513_2212074_2252722_2252061(Policy):
                 for i, prod in enumerate(observation["products"]):
                     prod_size = prod["size"][:]
                     prod_quantity = prod["quantity"]
-
-                    if prod_quantity > 0:
-                        temp_prod.append({
+                    temp_prod.append({
                         "size": prod_size,
                         "quantity": prod_quantity
                     })
-
                 self.list_prods = sorted(
                     temp_prod, 
                     key=lambda prod: (prod["size"][0], prod["size"][1]),  # Sort by width and length
                     reverse=True
                 )
+                # print(self.list_prods) 
 
                 list_stock = []
                 for i, stock in enumerate(observation["stocks"]):
@@ -60,9 +58,9 @@ class Policy2110513_2212074_2252722_2252061(Policy):
                         "arr": stock.copy()
                     }
                     list_stock.append(temp_stk)
-                self.list_stocks = sorted(list_stock, key=lambda x: (x["stock_w"], x["stock_h"]), reverse=True)
+                self.list_stocks = list_stock
                 # print(self.list_stocks)
-                self.cuts = self.greedy()
+                self.cuts = self.guillotine_cut()
                 # print(self.cuts)
                 self.firstIte = False
 
@@ -70,13 +68,16 @@ class Policy2110513_2212074_2252722_2252061(Policy):
             stock_idx = -1
             pos_x, pos_y = 0, 0
 
-            if (len(self.cuts) > 0):
+            if (self.cuts):
                 cut = self.cuts.pop(0)
                 stock_idx = cut["stock"]
                 prod_size = cut["size"]
                 pos_x = cut["x"]
                 pos_y = cut["y"]
 
+            # print(self._get_stock_size_(observation["stocks"][stock_idx]))
+            # print(stock_idx, prod_size, pos_x, pos_y, self._get_stock_size_(observation["stocks"][stock_idx]))
+            # print(observation["products"])
             return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
         
         elif self.decision_algorithm == 2:
@@ -147,43 +148,96 @@ class Policy2110513_2212074_2252722_2252061(Policy):
     
     ############################# ALGORITHM 01 #############################
 
-    def greedy(self):
-        # Run greedy algorithm
-        # print (self.list_prods)
-        print("Processing greedy algorithm")
-        local_cuts = []
-        for stock in self.list_stocks:
-            stock_w, stock_h = self._get_stock_size_(stock["arr"])
-            pos_x, pos_y = None, None
-            prod_size = [0, 0]
-            for y in range(stock_h):    
-                for x in range(stock_w):
-                    for prod in self.list_prods:
-                        if prod["quantity"] > 0:
-                            prod_size = prod["size"]
+    # def greedy(self):
+    #     # Run greedy algorithm
+    #     # print (self.list_prods)
+    #     print("Processing greedy algorithm")
+    #     local_cuts = []
+    #     for stock in self.list_stocks:
+    #         stock_w, stock_h = self._get_stock_size_(stock["arr"])
+    #         pos_x, pos_y = None, None
+    #         prod_size = [0, 0]
+    #         for y in range(stock_h):    
+    #             for x in range(stock_w):
+    #                 for prod in self.list_prods:
+    #                     if prod["quantity"] > 0:
+    #                         prod_size = prod["size"]
 
-                            if (stock_w - x < prod_size[0] or stock_h - y < prod_size[1]):
-                                continue   ## Skip if the product is too big for the stock
-                            if self._can_place_(stock["arr"], (x, y), prod_size):
-                                prod["quantity"] -= 1
-                                pos_x, pos_y = x, y
-                                stock["arr"][x:x + prod_size[0], y:y + prod_size[1]] = 3
-                                local_cuts.append({
-                                    "stock": stock["stock_idx"],
-                                    "size": prod_size,
-                                    "x": pos_x,
-                                    "y": pos_y
-                                })
-                                break
-        # print(local_cuts)
-        if len(local_cuts) == 0:
-            local_cuts.append({
-                "stock": -1,
-                "size": [0, 0],
-                "x": 0,
-                "y": 0
-            })
-        return local_cuts
+    #                         if (stock_w - x < prod_size[0] or stock_h - y < prod_size[1]):
+    #                             continue   ## Skip if the product is too big for the stock
+    #                         if self._can_place_(stock["arr"], (x, y), prod_size):
+    #                             prod["quantity"] -= 1
+    #                             pos_x, pos_y = x, y
+    #                             stock["arr"][x:x + prod_size[0], y:y + prod_size[1]] = 3
+    #                             local_cuts.append({
+    #                                 "stock": stock["stock_idx"],
+    #                                 "size": prod_size,
+    #                                 "x": pos_x,
+    #                                 "y": pos_y
+    #                             })
+    #                             break
+    #     # print(local_cuts)
+    #     if len(local_cuts) == 0:
+    #         local_cuts.append({
+    #             "stock": -1,
+    #             "size": [0, 0],
+    #             "x": 0,
+    #             "y": 0
+    #         })
+    #     return local_cuts
+    
+
+    def guillotine_cut(self):
+        # self.list_prods.sort(key=lambda p: p["size"][0] * p["size"][1], reverse=True)
+        self.list_stocks.sort(key=lambda s: s["stock_w"] * s["stock_h"], reverse=True)
+
+        def guillotine(stock_idx, stock_w, stock_h, products, demands, x_offset, y_offset):
+            if all(d == 0 for d in demands):  # Nếu tất cả demand đã được đáp ứng
+                return
+            if stock_w <= 0 or stock_h <= 0:  # Tấm không còn khả dụng
+                return
+
+            for i, (w_p, h_p) in enumerate(products):
+                if demands[i] > 0:
+                    # Thử cắt dọc
+                    if w_p <= stock_w and h_p <= stock_h:
+                        # print(self.cuts)
+                        demands[i] -= 1
+                        # Lưu vị trí cắt dọc với tọa độ (x, y)
+                        self.cuts.append({
+                            # "direction": "Vertical",
+                            "x": x_offset,
+                            "y": y_offset,
+                            "size": [w_p, h_p],
+                            "stock": stock_idx
+                        })
+                        # Cắt tấm stock còn lại và tiếp tục đệ quy
+                        guillotine(stock_idx, stock_w - w_p, stock_h, products, demands, x_offset + w_p, y_offset)
+
+                        # Thử cắt ngang
+                        # Cắt tấm stock còn lại và tiếp tục đệ quy
+                        guillotine(stock_idx, w_p, stock_h - h_p, products, demands, x_offset, y_offset + h_p)
+                        break
+
+            return
+
+        # Lặp qua các tấm stock
+        self.cuts = []
+        products = [(prod["size"]) for prod in self.list_prods]
+        demands = [prod["quantity"] for prod in self.list_prods]
+        # print(demands)
+
+        for i,stock in enumerate(self.list_stocks):
+            # print("Processing guillotine algorithm: ", i)
+            # print(self.cuts) if i>0 else None
+            stock_w, stock_h = stock["stock_w"], stock["stock_h"]
+            stock_idx = stock["stock_idx"]
+            guillotine(stock_idx, stock_w, stock_h, products, demands, 0, 0)
+            if all(d <= 0 for d in demands):
+                # print("AAAAAAAAAAAAAAAA")
+                # print(demands)
+                break
+        return self.cuts
     
     ############################# ALGORITHM 02 #############################
     def branch_and_bound_ilp(self, c, A_ub=None, b_ub=None, A_eq=None, b_eq=None, bounds=None, depth=0):
