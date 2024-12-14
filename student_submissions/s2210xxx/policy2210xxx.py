@@ -14,7 +14,7 @@ class Rectangle:
         self.quantity = quantity
 
         
-class Policy2033766_2033525(Policy):
+class Policy2033766_2033528(Policy):
     def __init__(self, policy_id=1):
         super().__init__()
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
@@ -178,9 +178,6 @@ class Policy2033766_2033525(Policy):
 
         print("No valid actions available. Returning default action.")
         return None
-
-    # Student code here
-    # You can add more functions if needed
 
 
 class QLearningPolicy(Policy):
