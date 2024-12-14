@@ -1,62 +1,46 @@
-# README
+# Mathematical Modelling - Fall 2024
 
-## Overview
-This project contains two cutting stock problem policies implemented as Python classes. Each policy is designed to handle the allocation of product sizes to available stock grids efficiently. The two classes are:
+## Assignment: Cutting Stock Problem
+<!-- Describe cutting stock problem -->
+Cuttin Stock Problem is a combinatorial optimization problem that arises in many industrial applications. The problem consists of cutting stocks of material into smaller pieces in order to meet the demand for smaller pieces. The objective is to minimize the number of stocks used to meet the demand for smaller pieces. The problem is NP-hard and can be solved using integer programming techniques.
 
-1. **FirstCutPolicy**: Implements a heuristic-based approach to place products sequentially into stocks by finding valid subgrid positions.
-2. **ColumnGeneration**: Uses the column generation technique to iteratively optimize cutting patterns for better resource utilization.
+Below is a demonstration of greedy algorithm for cutting stock problem.
+<!-- Show gif file named demo/greedy.gif -->
+![Greedy Algorithm](demo/greedy.gif)
 
----
+## Installation
+<!-- Describe how to install the project -->
+To install the project, you need to have Python installed on your machine. You can install Python from the official website. Once you have Python installed, you can clone the repository and run the following command to install the required packages:
+```bash
+pip install -r requirements.txt
+```
 
-## **FirstCutPolicy**
+## Usage
+<!-- Describe how to use the project -->
+To use the project, you need to run the following command:
+```bash
+python main.py
+```
 
-### Description
-The `FirstCutPolicy` is a straightforward heuristic-based method that aims to place products into the first available stock where they fit. It prioritizes simplicity and computational efficiency over global optimization.
+## How to implement your own policy
+<!-- Describe how to implement your own policy -->
+To implement your own policy, you need to create a new class that inherits from the `Policy` class and implement the `get_action` method. The `get_action` method should take a list of demands and a list of stock as input and return a dictionary that contains action information. The action information should include the size of demand, stock index, and position to cut the stock. You should also implement the `__init__` method to initialize the policy with any required parameters. Please refer to the `RandomPolicy` class in the `policy.py` file for an example implementation.
 
-### Algorithm Steps
-1. Iterate through the list of products, checking their demand and sizes.
-2. For each product, iterate through all available stocks.
-3. Use subgrid checking to find a valid position where the product can fit in the stock.
-4. Place the product and update the stock grid.
-5. Return the placement action or `None` if no valid placement is found.
+You can start by creating a new file in the `student_submissions` directory and implementing your policy in `s22110xxx` folder. Your code should be named `policy2210xxx.py` where `2210xxx` is your student ID. The policy class should be named `Policy2210xxx` where `2210xxx` is your student ID and inherit from the `Policy` class. You can have some support files in `s22110xxx` folder. If you are in honor class, you must implement reinforcement learning policy. Once you have implemented your policy, you can run uncomment the line in the `main.py` file that imports your policy and run the project to test your policy. You can only use basic python libraries such as numpy, pandas, torch, tensorflow, scikit-learn and scipy to implement your policy. Please put the new library in the `requirements.txt` file.  
 
-## **ColumnGeneration**
+After you complete your policy, you need to submit your code as a pull request to the main repository. The pull request should include the following information:
+- Title: Your student ID
+- A brief description of your policy
+- The implementation of your policy
+- The results of your policy on the test data
+- Any additional information you would like to include
 
-### Description
-The `ColumnGeneration` class implements the column generation optimization method, a more advanced approach designed to minimize material waste while fulfilling product demand. It combines a master problem and a pricing problem to iteratively refine cutting patterns.
+Any solutions that are not submitted as a pull request or do not follow the above guidelines will not be accepted. If you have any questions or need help implementing your policy, please post a message in the discussion forum.
 
-### Algorithm Steps
-1. **Initialization**:
-   - Generate initial patterns based on product sizes and stock dimensions.
-   - Ensure patterns are unique.
+## Contributing
+<!-- Describe how to contribute to the project -->
+To contribute to the project, you need to fork the repository and create a new branch. Once you have made your changes, you can create a pull request to merge your changes into the main branch.
 
-2. **Master Problem**:
-   - Solve a linear program to allocate demand across existing patterns.
-   - Extract dual prices from the solution to guide the pricing problem.
-
-3. **Pricing Problem**:
-   - Use dynamic programming to find new patterns with the highest reduced cost.
-   - Add the new pattern if it improves the solution.
-
-4. **Pattern Selection**:
-   - Choose the pattern that maximizes demand coverage and minimizes cost.
-
-5. **Action Conversion**:
-   - Convert the selected pattern into a placement action.
-
-## Comparison of Policies
-
-| Feature                | FirstCutPolicy                    | ColumnGeneration             |
-|------------------------|------------------------------------|------------------------------|
-| **Type**              | Heuristic                        | Optimization-based           |
-| **Efficiency**        | Fast, simpler logic              | Slower, computationally intensive |
-| **Optimality**        | Suboptimal, greedy placement     | Near-optimal patterns        |
-| **Complexity**        | Low                              | High                        |
-| **Use Case**          | Small-scale problems, quick results | Large-scale problems requiring minimal waste |
-
-## Policy Performance Comparison
-
-| Policy              | Filled Ratio | Trim Loss            |
-|---------------------|--------------|----------------------|
-| **FirstCutPolicy**  | 0.14         | 0.2216599996670104   |
-| **ColumnGeneration**| 0.2          | 0.19658451138683425  |
+## License
+<!-- Describe the license under which the project is distributed -->
+This project is distributed under the MIT License. See `LICENSE` for more information.
