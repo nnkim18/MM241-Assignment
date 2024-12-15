@@ -81,9 +81,6 @@ class Policy2352189_2352390_2352170_2352598_2352592(Policy):
         trim_loss = np.mean(trim_loss).item() if trim_loss else 1
         return (1-filled_ratio)*(1-trim_loss)
 
-    def calculate_fitness(self):
-        self.fitness_points = [self.evaluate_fitness(ind) for ind in self.population]
-
     def crossover(self):
         elite_size = self.elite_size_select
         ranked_population = sorted(
