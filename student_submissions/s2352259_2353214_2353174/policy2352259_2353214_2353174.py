@@ -1,6 +1,6 @@
 import numpy as np
 from policy import Policy
-
+from numpy.lib.stride_tricks import as_strided
 class Policy2352259_2353214_2353174(Policy):
     def __init__(self, policy_id=1):
         self.policy_id = policy_id
@@ -177,7 +177,6 @@ class Policy2352259_2353214_2353174(Policy):
         waste_score = 1.0 - (waste_area / (stock_w * stock_h))
         contact_score = contact / (4 * (w + h))  # Adjusted normalization
         
-
         return (
             0.5 * waste_score + 
             0.3 * contact_score +
@@ -213,35 +212,38 @@ class Policy2352259_2353214_2353174(Policy):
                 for width, height in orientations:
                     if width > stock_w or height > stock_h:
                         continue  # Skip orientations that don't fit
+                    
+                    occupancy_map = (stock != -1).astype(np.uint8)
+                    free_space = self._find_positions(occupancy_map, width, height)
+                    if free_space is None:
+                        continue
 
-                    positions = self._find_positions(stock, width, height)
-                    for pos in positions:
-                        # Simulate placement
-                        simulated_stock = stock.copy()
-                        self._place(simulated_stock, pos, (width, height), prod_idx)
+                    positions = np.argwhere(free_space)
+                    if positions.size == 0:
+                        continue
 
-                        # Calculate score
-                        score = self._calculate_placement_score(simulated_stock)
+                    x, y = positions[0]  # Take the first available position
+                    simulated_stock = stock.copy()
+                    self._place(simulated_stock, (x, y), (width, height), prod_idx)
 
-                        # Check if this is the best action so far
-                        if score > best_score:
-                            best_score = score
-                            best_action = {
-                                "stock_idx": idx,
-                                "size": (width, height),
-                                "position": pos,
-                            }
+                    # Calculate score
+                    score = self._calculate_placement_score(simulated_stock)
 
-                        # Break after finding a valid placement
-                        break  # Remove if you want to consider all positions
+                    # Check if this is the best action so far
+                    if score > best_score:
+                        best_score = score
+                        best_action = {
+                            "stock_idx": idx,
+                            "size": (width, height),
+                            "position": (x, y),
+                        }
 
-                    # Early exit if a best action is found
-                    if best_action and best_action['stock_idx'] == idx:
-                        break  # Exit orientation loop
+                    # Break after finding a valid placement
+                    break  # Remove if you want to consider all positions
 
                 # Early exit if a best action is found
                 if best_action and best_action['stock_idx'] == idx:
-                    break  # Exit stock loop
+                    break  # Exit orientation loop
 
             # Early exit if a best action is found
             if best_action:
@@ -262,19 +264,17 @@ class Policy2352259_2353214_2353174(Policy):
             )
         return self.stock_size_cache[key]
     
-    def _find_positions(self, stock, width, height):
-        positions = []
-        stock_w, stock_h = self._get_stock_size_(stock)
-        occupancy_map = (stock != -1)
-        for y in range(0, stock_h - height + 1):
-            x_range = range(0, stock_w - width + 1)
-            for x in x_range:
-                if occupancy_map[x:x+width, y:y+height].any():
-                    continue
-                positions.append((x, y))
-                # Break after finding the first valid position in the row
-                break
-        return positions
+    def _find_positions(self, occupancy_map, width, height):
+        shape = (occupancy_map.shape[0] - width + 1, occupancy_map.shape[1] - height + 1)
+        if shape[0] <= 0 or shape[1] <= 0:
+            return None
+        # Create a sliding window view
+        window_view = as_strided(occupancy_map,
+                                 shape=(shape[0], shape[1], width, height),
+                                 strides=occupancy_map.strides * 2)
+        # Check for all-zero windows (free space)
+        free_space = np.all(window_view == 0, axis=(2, 3))
+        return free_space
     
     def _place(self, stock, position, size, prod_idx=0):
         x, y = position
