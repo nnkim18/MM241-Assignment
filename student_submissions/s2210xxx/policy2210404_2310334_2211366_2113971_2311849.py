@@ -2,7 +2,7 @@ from policy import Policy
 import numpy as np
 
 
-class Policy2210xxx(Policy):
+class Policy2210404_2310334_2211366_2113971_2311849(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
@@ -16,7 +16,7 @@ class Policy2210xxx(Policy):
     def _bld(self, observation):
         """
         Implements the Bottom-Left-Decreasing (BLD) algorithm.
-        This tries to place products into stocks by sorting them in descending size order
+        This places products into stocks by sorting them in descending size order
         and placing them from the bottom-left corner upwards.
         """
         # Sort products by their largest dimension in descending order
@@ -55,7 +55,7 @@ class Policy2210xxx(Policy):
     def _nfdh(self, observation):
         """
         Implements the Next-Fit-Decreasing-Height (NFDH) algorithm.
-        This tries to pack products into stocks row by row while minimizing trim loss.
+        This packs products into stocks row by row while minimizing trim loss.
         """
         list_prods = sorted(
             [prod for prod in observation["products"] if prod["quantity"] > 0],
@@ -113,7 +113,6 @@ class Policy2210xxx(Policy):
     def _get_stock_size_(self, stock):
         """
         Returns the dimensions (width, height) of the stock.
-        Assumes stock is represented as a NumPy array.
         """
         stock_h, stock_w = stock.shape  # Access shape of the stock
         return stock_w, stock_h  # Return width and height
