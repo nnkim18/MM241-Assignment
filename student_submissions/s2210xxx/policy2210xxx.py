@@ -116,7 +116,6 @@ class Policy2210xxx(Policy):
                                     if self._can_place_(stock, (x, y), prod_size):                                    
                                         leftover_space = (stock_w - prod_h) * (stock_h - prod_w)
                                         if leftover_space < min_leftover_space:
-                                            print("xoay")
                                             min_leftover_space = leftover_space
                                             best_fit = (stock_idx, (x, y))          
                     if best_fit is not None:
