@@ -4,7 +4,7 @@ from random import randint, random, choices
 import numpy as np
 from scipy.optimize import linprog
 
-class Policy2210xxx(Policy):
+class Policy2312008_2311501_2311571_2312303(Policy):
     # Khởi tạo các tham số cấu hình cho thuật toán
     def __init__(self, policy_id, population_size=300, mutation_rate=0.1, max_generations=100):
         # Kiểm tra giá trị hợp lệ của policy_id
