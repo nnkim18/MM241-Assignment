@@ -159,13 +159,13 @@ class Policy2352234_2352913_2352069_2352415_2352301(Policy):
     
     def largest_free_rectangles(self, stock):
         """
-        Đếm số lượng vùng trống hình chữ nhật (giá trị là 0) trong stock.
+        Tính toán diện tích hình chữ nhật còn trống lớn nhất.
         
         Args:
-            stock (np.ndarray): Ma trận stock, 0 là vùng chưa cắt, 1 là vùng đã cắt.
+            stock (np.ndarray): Ma trận stock.
             
         Returns:
-            int: Số lượng vùng trống hình chữ nhật và diện tích của hình chữ nhật lớn nhất.
+            int: Diện tích của hình chữ nhật lớn nhất.
         """
         rows, cols = stock.shape
         visited = np.zeros_like(stock, dtype=bool)
