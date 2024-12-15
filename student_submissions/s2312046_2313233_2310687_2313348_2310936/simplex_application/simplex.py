@@ -1,6 +1,6 @@
 '''
-Description: SImplex application for 2D cutting-stock
-author: Lê Trọng Thiện - 2313233
+Description: Simplex application for 2D cutting-stock
+author: Phạm Lê Tiến Đạt - 2310687
 Time: Dec, 2024
 '''
 
