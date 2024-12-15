@@ -8,6 +8,7 @@ class GENETIC(Policy):
         self.population_size = 50
         self.num_generation = 8
         self.mutation_rate = 0.1
+        self.num_products = 0
         
     def get_action(self, observation, info):
         return self.genetic_algorithm(observation, info)
@@ -21,11 +22,13 @@ class GENETIC(Policy):
         #     2. Crossover
         #     3. Mutation
         #     4. Evaluate population
-        self.num_population = int(len(observation['products'])*0.2)
-        # make it even
+        # ! population = len prod * 10 is better or len_stock * 10 is better
+        self.num_population = int(len(observation['products']) )
+        # make num_population even
         if self.num_population % 2 != 0:
             self.num_population += 1
-        self.num_generation = int(self.num_population * 5)
+        
+        self.num_generation = 5
         population = self.initialize_population(observation)
         for _ in range(self.num_generation):
             score = [self.fitness(chromosome, observation) for chromosome in population]
@@ -117,7 +120,7 @@ class GENETIC(Policy):
         stock_w, stock_h = self._get_stock_size_(stock)
 
         # Calculate normalized distance to target (filling from bottom-left corner)
-        target_x, target_y = 0, 0
+        target_x, target_y = stock_w//2, stock_h//2
         max_distance = (stock_w**2 + stock_h**2)**0.5
         distance_to_target = (((pos_x - target_x)**2 + (pos_y - target_y)**2)**0.5) / max_distance
 
@@ -126,6 +129,7 @@ class GENETIC(Policy):
         stock_area = stock_w * stock_h
         used_area = self.calculated_used_area(stock)
         prop_area = used_area / stock_area  # Normalized [0, 1]
+        initial_prop_area = prop_area  # Area before adding the new product
 
         # Determine if product count is small
         total_products = len(observation['products'])
@@ -232,7 +236,7 @@ class GENETIC(Policy):
 
                 if self._can_place_(stock, (pos_x, pos_y), product_size[::-1]):
                     score = self.fitness(gene, observation)
-                    if score < best_score:
+                    if score > best_score:
                         best_score = score
                         best_position = (pos_x, pos_y)
                         product_size = product_size[::-1] 
