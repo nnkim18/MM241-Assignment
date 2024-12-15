@@ -152,14 +152,7 @@ class BranchAndBound:
 
     def solveRelaxedLP(self, A, b, c):
         res = linprog(c, A_eq = A, b_eq = b, bounds = (0, None), method = "highs")
-            # c (1-D array): The coefficients of the linear objective function to be minimized.
-            # A_ub (2-D array, optional): The inequality constraint matrix. Each row of A_ub specifies the coefficients of a linear inequality constraint on x.
-            # b_ub (1-D array, optional): The inequality constraint vector. Each element represents an upper bound on the corresponding value of A_ub(x).
-            # A_eq (2-D array, optional): The equality constraint matrix. Each row of A_eq specifies the coefficients of a linear equality constraint on x.
-            # b_eq (1-D array, optional): The equality constraint vector. Each element of A_eq(x) must equal the corresponding element of b_eq.
-            # bounds (sequence, optional): A sequence of (min, max) pairs for each element in x, defining the minimum and maximum values of that decision variable. If a single tuple (min, max) is provided, then min and max will serve as bounds for all decision variables. Use None to indicate that there is no bound. For instance, the default bound (0, None) means that all decision variables are non-negative, and the pair (None, None) means no bounds at all, i.e. all variables are allowed to be any real.
-            # method (str, optional): The algorithm used to solve the standard form problem. 'highs' (default), 'highs-ds', 'highs-ipm', 'interior-point' (legacy), 'revised simplex' (legacy), and 'simplex' (legacy) are supported.
-
+        
         if res.success: # Nếu tìm ra nghiệm cho bài toán ILP
             return res.fun, res.x  # Giá trị mục tiêu và nghiệm thư giãn
         return float('inf'), None
