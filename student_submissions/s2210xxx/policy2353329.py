@@ -86,7 +86,7 @@ class Policy2353329_2(Policy):
         for prod in available_products:
             number_of_products += prod["quantity"]
         
-        # Fill the stock using greedy algorithm in random order until try out all available_products, the product is rotated if it can't fit in the stock
+        # Fill the stock using bottom-left fill algorithm in random order until try out all available_products, the product is rotated if it can't fit in the stock
         for _ in range(number_of_products):
             # Get indices of products with quantity > 0
             valid_indices = []
@@ -186,7 +186,7 @@ class Policy2353329_2(Policy):
                     for prod in remain_products_group[current_index]:
                         number_of_products += prod["quantity"]
 
-                    # Fill the stock using greedy algorithm in random order until try out all available_products, the product is rotated if it can't fit in the stock
+                    # Fill the stock using bottom-left fill algorithm in random order until try out all available_products, the product is rotated if it can't fit in the stock
                     for _ in range(number_of_products):
                         # Get indices of products with quantity > 0
                         valid_indices = []
