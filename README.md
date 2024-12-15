@@ -1,46 +1,69 @@
-# Mathematical Modelling - Fall 2024
+# Group 125's Submission - Math Modeling Assignment - Semester 241
 
-## Assignment: Cutting Stock Problem
-<!-- Describe cutting stock problem -->
-Cuttin Stock Problem is a combinatorial optimization problem that arises in many industrial applications. The problem consists of cutting stocks of material into smaller pieces in order to meet the demand for smaller pieces. The objective is to minimize the number of stocks used to meet the demand for smaller pieces. The problem is NP-hard and can be solved using integer programming techniques.
+## Group Members
+- Phạm Trương Anh Huy - 2311241
+- Nguyễn Thanh Toàn - 2313492
+- Nguyễn Mạnh Thi - 2313205
+- Cao Hữu Thiên Hoàng - 2311030
 
-Below is a demonstration of greedy algorithm for cutting stock problem.
-<!-- Show gif file named demo/greedy.gif -->
-![Greedy Algorithm](demo/greedy.gif)
+## Assignment: Algorithm for Cutting Stock Problem
+### Iterative Sequential Heuristic Procedure
+![ISHP Algorithm](student_submissions/s2210xxx/ishp.gif)
+The Iterative Sequential Heuristic Procedure (ISHP) is a heuristic algorithm designed to solve the two-dimensional cutting stock problem (2D CSP). Its primary goal is to maximize material utilization by iteratively generating and evaluating feasible cutting patterns while minimizing waste.
+Key features of the ISHP algorithm include:
+#### Pattern Generation
+- Iterates at each step generating patterns for chosen.
+- Uses a 3-Step Greedy Packing (3SGP) strategy to construct cutting patterns.
+- Incorporates product rotation and recursive partitioning to improve flexibility and compactness.
+#### Pattern Evaluation
+- Scores patterns based on material utilization and penalizes frequently reused patterns to encourage diversity.
+- Select pattern that has best score.
+#### Dynamic Correction Values
+- Uses simple correction values methods
+- Updates correction values for products based on past placements, allowing the algorithm to "learn" and improve over iterations.
+#### Actions queue
+- Converts the best-selected pattern into a sequence of actions, ensuring compatibility with environment constraints.
 
-## Installation
-<!-- Describe how to install the project -->
-To install the project, you need to have Python installed on your machine. You can install Python from the official website. Once you have Python installed, you can clone the repository and run the following command to install the required packages:
-```bash
-pip install -r requirements.txt
-```
+### Branch and Bound
+![Branch and Bound Algorithm](student_submissions/s2210xxx/B&B.gif)
+Algorithm places products into available stocks to optimize space utilization and minimize waste. It uses a heuristic approach to guide decisions without backtracking.
+Key features of the B&B algorithm include:
+#### Product Placement
+- Checks if a product can fit in a stock at a specific position, considering boundaries and availability.
+- Tries both original and rotated orientations to find the best placement.
+#### Sorting and Prioritization
+- Products are sorted by size (largest first) to maximize space usage.
+- Stocks are prioritized based on how well they fit the product, considering available space and dimension matching.
+#### Bounds Calculation
+- Estimates the minimum number of stocks needed based on the total product area and available stock area.
+- Ensures efficient use of resources while avoiding unnecessary stock usage.
+#### Branch Exploration
+- Attempts to place each product in the best possible stock based on the current state.
+- Reverts placements after evaluation to explore other options but does not revisit earlier branches systematically.
+#### Action Selection
+- Chooses the best action from the evaluated branches and applies it to the environment.
 
-## Usage
-<!-- Describe how to use the project -->
-To use the project, you need to run the following command:
-```bash
-python main.py
-```
 
-## How to implement your own policy
-<!-- Describe how to implement your own policy -->
-To implement your own policy, you need to create a new class that inherits from the `Policy` class and implement the `get_action` method. The `get_action` method should take a list of demands and a list of stock as input and return a dictionary that contains action information. The action information should include the size of demand, stock index, and position to cut the stock. You should also implement the `__init__` method to initialize the policy with any required parameters. Please refer to the `RandomPolicy` class in the `policy.py` file for an example implementation.
-
-You can start by creating a new file in the `student_submissions` directory and implementing your policy in `s22110xxx` folder. Your code should be named `policy2210xxx.py` where `2210xxx` is your student ID. The policy class should be named `Policy2210xxx` where `2210xxx` is your student ID and inherit from the `Policy` class. You can have some support files in `s22110xxx` folder. If you are in honor class, you must implement reinforcement learning policy. Once you have implemented your policy, you can run uncomment the line in the `main.py` file that imports your policy and run the project to test your policy. You can only use basic python libraries such as numpy, pandas, torch, tensorflow, scikit-learn and scipy to implement your policy. Please put the new library in the `requirements.txt` file.  
-
-After you complete your policy, you need to submit your code as a pull request to the main repository. The pull request should include the following information:
-- Title: Your student ID
-- A brief description of your policy
-- The implementation of your policy
-- The results of your policy on the test data
-- Any additional information you would like to include
-
-Any solutions that are not submitted as a pull request or do not follow the above guidelines will not be accepted. If you have any questions or need help implementing your policy, please post a message in the discussion forum.
-
-## Contributing
-<!-- Describe how to contribute to the project -->
-To contribute to the project, you need to fork the repository and create a new branch. Once you have made your changes, you can create a pull request to merge your changes into the main branch.
-
-## License
-<!-- Describe the license under which the project is distributed -->
-This project is distributed under the MIT License. See `LICENSE` for more information.
+## Reinforcement Learning
+The reinforcement learning (RL) algorithm designed for the 2D Cutting Stock Problem (2D CSP) leverages a Proximal Policy Optimization (PPO) framework to train an agent capable of optimizing stock utilization while minimizing trim-loss. The architecture incorporates key components such as encoders, an environment simulator, a masking mechanism, and neural networks for decision-making.
+![Reinforcement Learning](student_submissions/s2210xxx/RL.gif)
+Core Features:
+### Encoders
+- Product Encoder: Extracts features from product data using a 1D Convolutional Layer.
+- Stock Encoder: Processes stock data using a 2D Convolutional Layer for spatial feature extraction.
+### Environment Simulator
+Simulates the real environment to enable efficient action queries during training.
+### Masking Mechanism
+Prevents the agent from repeating invalid actions.
+Prioritizes already-used stocks to minimize the number of stocks utilized.
+### Neural Networks
+- Actor (Policy Network): Outputs a probability distribution over the action space.
+- Critic (Value Network): Estimates the expected return from the current state.
+### PPO Framework
+Ensures stable policy updates through clipping mechanisms and advantage estimation using Generalized Advantage Estimation (GAE).
+### Results
+While the algorithm reduced trim-loss through heuristic-based masking, it failed to converge to an optimal policy due to:
+- Limitations in architecture: Lack of decoding mechanisms and overly simplistic encoders.
+- Inefficient reward signals: Inadequate penalization of wasteful actions and insufficient incentivization of compact placements.
+- Restricted exploration: The masking mechanism overly constrained the agent, limiting its ability to learn and generalize.
+Despite these challenges, the experiment laid a foundation for improvement, highlighting areas such as integrating Transformer-based architectures and enhancing reward structures to guide the learning process effectively.
