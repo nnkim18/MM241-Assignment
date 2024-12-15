@@ -50,7 +50,7 @@ class Policy2110513_2212074_2252722_2252061(Policy):
 
                 list_stock = []
                 for i, stock in enumerate(observation["stocks"]):
-                    stock_w, stock_h = self._get_stock_size_(stock)
+                    stock_h, stock_w = self._get_stock_size_(stock)
                     temp_stk = {
                         "stock_idx": i,
                         "stock_w": stock_w,
@@ -60,7 +60,7 @@ class Policy2110513_2212074_2252722_2252061(Policy):
                     list_stock.append(temp_stk)
                 self.list_stocks = list_stock
                 # print(self.list_stocks)
-                self.cuts = self.guillotine_cut()
+                self.cuts = self.guillotine_cut(observation)
                 # print(self.cuts)
                 self.firstIte = False
 
@@ -88,7 +88,7 @@ class Policy2110513_2212074_2252722_2252061(Policy):
             sorted_stocks = sorted(enumerate(stocks), key=lambda x: stock_areas[x[0]], reverse=True)
 
             for stock_idx, stock in sorted_stocks:
-                stock_w, stock_h = self._get_stock_size_(stock)
+                stock_h, stock_w = self._get_stock_size_(stock)
                 
                 valid_prods = []
                 for prod_idx, prod in enumerate(list_prods):
@@ -187,11 +187,11 @@ class Policy2110513_2212074_2252722_2252061(Policy):
     #     return local_cuts
     
 
-    def guillotine_cut(self):
+    def guillotine_cut(self, observation):
         # self.list_prods.sort(key=lambda p: p["size"][0] * p["size"][1], reverse=True)
         self.list_stocks.sort(key=lambda s: s["stock_w"] * s["stock_h"], reverse=True)
 
-        def guillotine(stock_idx, stock_w, stock_h, products, demands, x_offset, y_offset):
+        def guillotine(stock_idx, stock_w, stock_h, products, demands, x_offset, y_offset, observation):
             if all(d == 0 for d in demands):  # Nếu tất cả demand đã được đáp ứng
                 return
             if stock_w <= 0 or stock_h <= 0:  # Tấm không còn khả dụng
@@ -201,23 +201,24 @@ class Policy2110513_2212074_2252722_2252061(Policy):
                 if demands[i] > 0:
                     # Thử cắt dọc
                     if w_p <= stock_w and h_p <= stock_h:
-                        # print(self.cuts)
-                        demands[i] -= 1
-                        # Lưu vị trí cắt dọc với tọa độ (x, y)
-                        self.cuts.append({
-                            # "direction": "Vertical",
-                            "x": x_offset,
-                            "y": y_offset,
-                            "size": [w_p, h_p],
-                            "stock": stock_idx
-                        })
-                        # Cắt tấm stock còn lại và tiếp tục đệ quy
-                        guillotine(stock_idx, stock_w - w_p, stock_h, products, demands, x_offset + w_p, y_offset)
+                        if (self._can_place_(observation["stocks"][stock_idx], (x_offset, y_offset), [w_p, h_p])):
+                            # print(self.cuts)
+                            demands[i] -= 1
+                            # Lưu vị trí cắt dọc với tọa độ (x, y)
+                            self.cuts.append({
+                                # "direction": "Vertical",
+                                "x": x_offset,
+                                "y": y_offset,
+                                "size": [w_p, h_p],
+                                "stock": stock_idx
+                            })
+                            # Cắt tấm stock còn lại và tiếp tục đệ quy
+                            guillotine(stock_idx, stock_w - w_p, stock_h, products, demands, x_offset + w_p, y_offset, observation)
 
-                        # Thử cắt ngang
-                        # Cắt tấm stock còn lại và tiếp tục đệ quy
-                        guillotine(stock_idx, w_p, stock_h - h_p, products, demands, x_offset, y_offset + h_p)
-                        break
+                            # Thử cắt ngang
+                            # Cắt tấm stock còn lại và tiếp tục đệ quy
+                            guillotine(stock_idx, w_p, stock_h - h_p, products, demands, x_offset, y_offset + h_p, observation)
+                            break
 
             return
 
@@ -232,7 +233,7 @@ class Policy2110513_2212074_2252722_2252061(Policy):
             # print(self.cuts) if i>0 else None
             stock_w, stock_h = stock["stock_w"], stock["stock_h"]
             stock_idx = stock["stock_idx"]
-            guillotine(stock_idx, stock_w, stock_h, products, demands, 0, 0)
+            guillotine(stock_idx, stock_w, stock_h, products, demands, 0, 0, observation)
             if all(d <= 0 for d in demands):
                 # print("AAAAAAAAAAAAAAAA")
                 # print(demands)
