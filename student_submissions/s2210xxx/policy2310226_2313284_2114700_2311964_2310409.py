@@ -37,25 +37,27 @@ class Greedy(Policy):
         pos_x, pos_y = 0, 0
         big_stock_idx= self.bis_stock(observation)
         big_prod_size= self.big_prod(observation)
-        for i in big_stock_idx:
-            stock= list_stock[i]
-            for j in big_prod_size:
-                prod=list_prod[j]
-                if prod["quantity"] > 0:
-                    prod_size = prod["size"]
-                    prod_w, prod_h = prod_size
-                    stock_w, stock_h = self._get_stock_size_(stock)
+        
+        for i in big_prod_size:
+            prod=list_prod[i]
+            if prod["quantity"] <= 0:
+                continue
+            prod_size = prod["size"]
+            for j in big_stock_idx:
+                stock=list_stock[j]
+                prod_w, prod_h = prod_size
+                stock_w, stock_h = self._get_stock_size_(stock)
 
-                    if stock_w < prod_w or stock_h < prod_h:
-                        continue
-                    elif stock_w >= prod_h and stock_h >= prod_w and stock_w < prod_w and stock_h < prod_h :
-                        prod_size = self.rotate_prod(prod_size)
+                if stock_w* stock_h < prod_h* prod_w:
+                    continue
+                if stock_w >= prod_h and stock_h >= prod_w:  # Nếu sản phẩm xoay ngang có thể vừa
+                    prod_size = self.rotate_prod(prod_size)
                     prod_w, prod_h = prod_size
-                    for x in range(stock_w - prod_w + 1):
-                        for y in range(stock_h - prod_h + 1):
-                            if self._can_place_(stock, (x, y), prod_size):
-                                pos_x, pos_y = x, y
-                                return {"stock_idx": i, "size": prod_size, "position": (pos_x, pos_y)}
+                for x in range(stock_w - prod_w + 1):
+                    for y in range(stock_h - prod_h + 1):
+                        if self._can_place_(stock, (x, y), prod_size):
+                            pos_x, pos_y = x, y
+                            return {"stock_idx": j, "size": prod_size, "position": (pos_x, pos_y)}
 
     def rotate_prod(self, prod_size):
         prod_w,prod_h=prod_size
