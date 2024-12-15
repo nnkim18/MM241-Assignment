@@ -400,3 +400,4 @@ class BestFitPolicy(Policy):
     # def _evaluate_quality(self, state):
     #     # Calculate total quality from placements
     #     return sum(prod["quantity"] for prod_idx, stock_idx, position in state["placements"])
+    #Test thu code
