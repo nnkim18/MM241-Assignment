@@ -108,13 +108,13 @@ class Policy2110513_2212074_2252722_2252061(Policy):
                 A.append(area_constraint)
                 b.append(stock_w * stock_h)
 
-                width_constraint = [prod["size"][0] for _, prod in valid_prods]
-                A.append(width_constraint)
-                b.append(stock_w)
+                # width_constraint = [prod["size"][0] for _, prod in valid_prods]
+                # A.append(width_constraint)
+                # b.append(stock_w)
 
-                height_constraint = [prod["size"][1] for _, prod in valid_prods]
-                A.append(height_constraint)
-                b.append(stock_h)
+                # height_constraint = [prod["size"][1] for _, prod in valid_prods]
+                # A.append(height_constraint)
+                # b.append(stock_h)
 
                 bounds = [(0, prod["quantity"]) for _, prod in valid_prods]
                 
