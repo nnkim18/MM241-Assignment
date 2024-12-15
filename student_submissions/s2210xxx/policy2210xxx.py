@@ -2,54 +2,136 @@ from policy import Policy
 import numpy as np
 
 
-
-
-class Policy2210xxx(Policy):  # Lấy product từ lớn đến nhỏ, trái qua phải, lấy theo thứ tự
-    def __init__(self):
-        pass
+class Policy2210xxx(Policy):
+    def __init__(self, policy_id=1):
+        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+        self.policy_id = policy_id
 
     def get_action(self, observation, info):
-        list_prods = observation["products"]
+        if self.policy_id == 1:
+            return self._bld(observation)
+        elif self.policy_id == 2:
+            return self._nfdh(observation)
 
-        # Sắp xếp danh sách sản phẩm theo kích thước giảm dần (diện tích)
-        sorted_prods = sorted(
-            list_prods,
-            key=lambda prod: prod["size"][0] * prod["size"][1],
+    def _bld(self, observation):
+        """
+        Implements the Bottom-Left-Decreasing (BLD) algorithm.
+        This tries to place products into stocks by sorting them in descending size order
+        and placing them from the bottom-left corner upwards.
+        """
+        # Sort products by their largest dimension in descending order
+        list_prods = sorted(
+            [prod for prod in observation["products"] if prod["quantity"] > 0],
+            key=lambda p: max(p["size"]),  # Sort by the larger dimension
             reverse=True
         )
 
-        stock_idx = -1
-        pos_x, pos_y = None, None
+        # Iterate over each product
+        for prod in list_prods:
+            prod_size = prod["size"]
 
-        # Duyệt qua từng kho theo thứ tự
-        for i, stock in enumerate(observation["stocks"]):
+            # Check each stock for placement
+            for stock_idx, stock in enumerate(observation["stocks"]):
+                stock_w, stock_h = self._get_stock_size_(stock)
+
+                # Try to place the product in its current orientation
+                for x in range(stock_w - prod_size[0] + 1):
+                    for y in range(stock_h - prod_size[1] + 1):
+                        if self._can_place_(stock, (x, y), prod_size):
+                            prod["quantity"] -= 1  # Deduct the product quantity
+                            return {"stock_idx": stock_idx, "size": prod_size, "position": (x, y)}
+
+                # Try to place the product in rotated orientation
+                prod_size_rotated = prod_size[::-1]
+                for x in range(stock_w - prod_size_rotated[0] + 1):
+                    for y in range(stock_h - prod_size_rotated[1] + 1):
+                        if self._can_place_(stock, (x, y), prod_size_rotated):
+                            prod["quantity"] -= 1  # Deduct the product quantity
+                            return {"stock_idx": stock_idx, "size": prod_size_rotated, "position": (x, y)}
+
+        # If no placement is possible, return an invalid action
+        return {"stock_idx": -1, "size": [0, 0], "position": (0, 0)}
+
+    def _nfdh(self, observation):
+        """
+        Implements the Next-Fit-Decreasing-Height (NFDH) algorithm.
+        This tries to pack products into stocks row by row while minimizing trim loss.
+        """
+        list_prods = sorted(
+            [prod for prod in observation["products"] if prod["quantity"] > 0],
+            key=lambda p: p["size"][1],  # Sort by height
+            reverse=True
+        )
+
+        for stock_idx, stock in enumerate(observation["stocks"]):  # Process one stock at a time
             stock_w, stock_h = self._get_stock_size_(stock)
 
-            # Duyệt qua từng sản phẩm (đã được sắp xếp từ lớn đến nhỏ)
-            for prod in sorted_prods:
-                if prod["quantity"] > 0:
-                    prod_size = prod["size"]
-                    prod_w, prod_h = prod_size
+            # Initialize placement variables
+            current_x, current_y = 0, 0  # Start from the top-left corner
+            max_row_height = 0  # Track the maximum height of the current row
 
-                    # Kiểm tra nếu sản phẩm có thể đặt vào kho
-                    if stock_w < prod_w or stock_h < prod_h:
-                        continue
+            for prod in list_prods:
+                if prod["quantity"] == 0:
+                    continue  # Skip products with zero quantity
 
-                    # Áp dụng thuật toán Bottom-Left để tìm vị trí phù hợp
-                    for x in range(stock_w - prod_w + 1):
-                        for y in range(stock_h - prod_h + 1):
-                            if self._can_place_(stock, (x, y), prod_size):
-                                # Nếu đặt được sản phẩm, trả về hành động
-                                # print({
-                                #     "stock_idx": i,
-                                #     "size": prod_size,
-                                #     "position": (x, y),
-                                # })
-                                return {
-                                    "stock_idx": i,
-                                    "size": prod_size,
-                                    "position": (x, y),
-                                }         
-        #print({"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)})
-        return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
-    
+                prod_size = prod["size"]
+
+                while current_y + prod_size[1] <= stock_h:  # Ensure we stay within the stock height
+                    if current_x + prod_size[0] <= stock_w:  # Check if product fits horizontally
+                        if self._can_place_(stock, (current_x, current_y), prod_size):
+                            prod["quantity"] -= 1  # Deduct the quantity of this product
+                            return {"stock_idx": stock_idx, "size": prod_size, "position": (current_x, current_y)}
+                        current_x += prod_size[0]  # Move to the right
+                    else:  # Start a new row
+                        current_y += max_row_height
+                        current_x = 0
+                        max_row_height = 0  # Reset row height
+
+                    max_row_height = max(max_row_height, prod_size[1])  # Update row height
+
+                # Try rotated placement
+                prod_size_rotated = prod_size[::-1]
+                current_x, current_y = 0, 0  # Reset position variables
+                max_row_height = 0
+
+                while current_y + prod_size_rotated[1] <= stock_h:
+                    if current_x + prod_size_rotated[0] <= stock_w:
+                        if self._can_place_(stock, (current_x, current_y), prod_size_rotated):
+                            prod["quantity"] -= 1  # Deduct the quantity of this product
+                            return {"stock_idx": stock_idx, "size": prod_size_rotated, "position": (current_x, current_y)}
+                        current_x += prod_size_rotated[0]
+                    else:  # Start a new row
+                        current_y += max_row_height
+                        current_x = 0
+                        max_row_height = 0
+
+                    max_row_height = max(max_row_height, prod_size_rotated[1])  # Update row height
+
+        # If no placement is possible, return an invalid action
+        return {"stock_idx": -1, "size": [0, 0], "position": (0, 0)}
+
+    def _get_stock_size_(self, stock):
+        """
+        Returns the dimensions (width, height) of the stock.
+        Assumes stock is represented as a NumPy array.
+        """
+        stock_h, stock_w = stock.shape  # Access shape of the stock
+        return stock_w, stock_h  # Return width and height
+
+def _can_place_(self, stock, position, prod_size):
+    """
+    Checks if a product can be placed at the given position in the stock.
+    """
+    x, y = position
+    prod_w, prod_h = prod_size
+
+    # Ensure the product is within bounds
+    if x + prod_w > stock.shape[1] or y + prod_h > stock.shape[0]:
+        return False
+
+    # Check if all cells in the placement area are free
+    region = stock[y:y + prod_h, x:x + prod_w]
+    if np.any(region != 0):
+        return False
+
+    return True
