@@ -2,7 +2,7 @@ from policy import Policy
 import numpy as np
 import random
 
-class Policy2210737_2311075_2213857_2212594_2211122(Policy):
+class Policy2210xxx(Policy):
     def __init__(self, policy_id=1):
         """
         Initializes the custom policy with a specific ID.
@@ -22,10 +22,12 @@ class Policy2210737_2311075_2213857_2212594_2211122(Policy):
             return self._brute_force_policy(observation, info)
 
     def _genetic_algorithm(self, observation, info):
+      
+        
         """
         Implements a Genetic Algorithm (GA) based policy to minimize trim loss.
         """
-        population_size = 30  # Increased population size
+        population_size = 100  # Increased population size
         generations = 100  # Increased number of generations
         mutation_rate = 0.1  # Adjusted mutation rate
 
@@ -74,23 +76,49 @@ class Policy2210737_2311075_2213857_2212594_2211122(Policy):
         return self._generate_random_solution(products, stocks)[0]
 
     def _generate_random_solution(self, products, stocks):
-        """Generate a random solution."""
-        solution = []
-        for product in products:
-            if product["quantity"] > 0:
+    
+       solution = []  # Đảm bảo thụt lề đúng ở đây
+       for product in products:
+          if product["quantity"] > 0:
+              prod_size = product["size"]
+
+            # Tìm vị trí phù hợp
+              pos_x, pos_y, stock_idx = None, None, None
+              for _ in range(10):  # Thử tối đa 10 lần
+                # Random chọn một kho
                 stock_idx = random.randint(0, len(stocks) - 1)
                 stock = stocks[stock_idx]
+
+                # Lấy kích thước của kho
                 stock_w, stock_h = self._get_stock_size_(stock)
+                prod_w, prod_h = prod_size
 
-                pos_x = random.randint(0, max(0, stock_w - product["size"][0]))
-                pos_y = random.randint(0, max(0, stock_h - product["size"][1]))
+                # Kiểm tra điều kiện đặt ngang
+                if stock_w >= prod_w and stock_h >= prod_h:
+                    pos_x = random.randint(0, stock_w - prod_w)
+                    pos_y = random.randint(0, stock_h - prod_h)
+                    if self._can_place_(stock, (pos_x, pos_y), prod_size):
+                        break
 
+                # Kiểm tra điều kiện đặt dọc
+                if stock_w >= prod_h and stock_h >= prod_w:
+                    pos_x = random.randint(0, stock_w - prod_h)
+                    pos_y = random.randint(0, stock_h - prod_w)
+                    if self._can_place_(stock, (pos_x, pos_y), prod_size[::-1]):
+                        prod_size = prod_size[::-1]  # Đảo chiều kích thước
+                        break
+
+            # Nếu tìm được vị trí phù hợp, thêm vào giải pháp
+              if pos_x is not None and pos_y is not None and stock_idx is not None:
                 solution.append({
                     "stock_idx": stock_idx,
-                    "size": product["size"],
-                    "position": (pos_x, pos_y)
+                    "size": prod_size,
+                    "position": (pos_x, pos_y),
                 })
-        return solution
+
+       return solution
+
+
 
     def _evaluate_fitness(self, solution, stocks):
         """Evaluate the fitness of a solution based on trim loss."""
@@ -142,23 +170,60 @@ class Policy2210737_2311075_2213857_2212594_2211122(Policy):
         ]
         return child
 
+
     def _mutate(self, solution, products, stocks):
-        """Mutate a solution by modifying a random action."""
-        idx = random.randint(0, len(solution) - 1)
-        random_product = random.choice(products)
-        if random_product["quantity"] > 0:
-            stock_idx = random.randint(0, len(stocks) - 1)
+        """Đột biến giải pháp mà không sử dụng random."""
+    # Tìm hành động gây lãng phí nhiều nhất
+        max_trim_loss_idx = None
+        max_trim_loss = -1
+
+        for idx, action in enumerate(solution):
+            stock_idx = action["stock_idx"]
+            size = action["size"]
+            position = action["position"]
             stock = stocks[stock_idx]
-            stock_w, stock_h = self._get_stock_size_(stock)
 
-            pos_x = random.randint(0, max(0, stock_w - random_product["size"][0]))
-            pos_y = random.randint(0, max(0, stock_h - random_product["size"][1]))
+            if self._can_place_(stock, position, size):
+                stock_area = np.sum(stock != -2)
+                used_area = size[0] * size[1]
+                trim_loss = max((stock_area - used_area) / stock_area, 0)
 
-            solution[idx] = {
-                "stock_idx": stock_idx,
-                "size": random_product["size"],
-                "position": (pos_x, pos_y)
-            }
+                if trim_loss > max_trim_loss:
+                    max_trim_loss = trim_loss
+                    max_trim_loss_idx = idx
+
+        # Nếu không tìm được hành động nào để cải thiện, kết thúc
+        if max_trim_loss_idx is None:
+            return
+
+        # Tìm sản phẩm chưa được sử dụng và cố gắng đặt nó vào tốt hơn
+        for product in products:
+            if product["quantity"] > 0:
+                for stock_idx, stock in enumerate(stocks):
+                    stock_w, stock_h = self._get_stock_size_(stock)
+
+                    # Tìm vị trí phù hợp nhất
+                    best_position = None
+                    min_waste = float("inf")
+
+                    for pos_x in range(stock_w - product["size"][0] + 1):
+                        for pos_y in range(stock_h - product["size"][1] + 1):
+                            if self._can_place_(stock, (pos_x, pos_y), product["size"]):
+                                # Tính toán lãng phí
+                                waste = (stock_w * stock_h) - (product["size"][0] * product["size"][1])
+                                if waste < min_waste:
+                                    min_waste = waste
+                                    best_position = (pos_x, pos_y)
+
+                    # Nếu tìm được vị trí tốt hơn, thực hiện đột biến
+                    if best_position:
+                        solution[max_trim_loss_idx] = {
+                            "stock_idx": stock_idx,
+                            "size": product["size"],
+                            "position": best_position,
+                        }
+                        return
+
 
     def _is_action_valid(self, action, products, stocks):
         """Check if an action is valid."""
@@ -254,6 +319,7 @@ class Policy2210737_2311075_2213857_2212594_2211122(Policy):
                                                 "size": [prod_w, prod_h],
                                                 "position": (x, y),
                                             }
+                           
 
         return best_placement if best_placement else {"stock_idx": -1, "size": [0, 0], "position": (0, 0)}
 
