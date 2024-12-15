@@ -2,7 +2,7 @@ from policy import Policy
 import numpy as np
 
 # 1: First Fit Decreasing 2: Maximize Remaining Rectangle
-class Policy_2352234_2352913_2352069_2352415_2352301(Policy):
+class Policy2352234_2352913_2352069_2352415_2352301(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id 
