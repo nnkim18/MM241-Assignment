@@ -3,7 +3,7 @@ from policy import Policy
 import numpy as np
 
 
-class Policy2210xxx(Policy):
+class Policy2213707_2213709_2213279_2213357_2310982(Policy):
     def __init__(self, policy_id):
         self.stock_products = []
         self.check = False
