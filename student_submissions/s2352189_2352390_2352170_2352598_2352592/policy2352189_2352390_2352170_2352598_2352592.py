@@ -3,11 +3,8 @@ import numpy as np
 
 class Policy2352189_2352390_2352170_2352598_2352592(Policy):
     def __init__(self, policy_id = 1):
-        self.population_size = 10   # Giảm số cá thể để giảm thời gian chạy
-        self.mutation_rate = 0.8   # Giảm tỷ lệ mutation
-        self.rotation_rate = 0
-        self.max_attempts = 100
-        self.crossover_rate = 0.5
+        self.population_size = 10   
+        self.mutation_rate = 0.7 
         self.elite_size_select = 1
         self.generation_count = 1
         self.fitness_list = []
@@ -24,14 +21,14 @@ class Policy2352189_2352390_2352170_2352598_2352592(Policy):
     def new_individual(self):
         product_counts = [0] * len(self.products)
         sheets = []
-        #indices = np.arange(len(self.products))
+
         indices = list(range(len(self.products)))
-        #original_indices = indices.copy()
+
         
         if np.random.random() < self.mutation_rate:
             np.random.shuffle(indices)
         else:
-                    # Dùng FFD
+            # Dùng FFD
             indices = sorted(indices, key=lambda p: self.products[p]["size"][0] * self.products[p]["size"][1], reverse=True)
         for stock in self.stocks:
             sheet = stock.copy()
@@ -40,34 +37,21 @@ class Policy2352189_2352390_2352170_2352598_2352592(Policy):
                 np.sum(np.any(stock != -2, axis=0)),
             )
 
-            # Ma trận đánh dấu các ô trống
             empty_map = np.full((H, W), True)
 
-            #for i, product in enumerate(self.products):
-            #for i in range(len(indices)):
             for i in indices:
                 product = self.products[i]
                 w, h = product["size"]
-                #old_index = original_indices[indices[i]]
-                #w, h = self.products[old_index]["size"]
-
-                # Xoay sản phẩm nếu cần
-                if np.random.random() < self.rotation_rate:
-                    w, h = h, w
-
                 if product_counts[i] >= product["quantity"]:
-                    continue  # Bỏ qua nếu đã đặt đủ sản phẩm này
-
-                # Duyệt để đặt sản phẩm
+                    continue
                 for x in range(W - w + 1):
                     for y in range(H - h + 1):
                         if empty_map[y : y + h, x : x + w].all():
-                            # Đặt sản phẩm vào vị trí (x, y)
                             sheet[y : y + h, x : x + w] = i
                             empty_map[y : y + h, x : x + w] = False
                             product_counts[i] += 1
                             if product_counts[i] >= product["quantity"]:
-                                break  # Dừng khi đạt đủ số lượng
+                                break
                     if product_counts[i] >= product["quantity"]:
                         break
 
@@ -78,36 +62,34 @@ class Policy2352189_2352390_2352170_2352598_2352592(Policy):
         return sheets, product_counts
 
     def init(self):
-        # Sinh cá thể ban đầu
         self.population = []
-        # Sinh từng cá thể
         for _ in range(self.population_size):
             self.population.append(self.new_individual())
 
-
     def evaluate_fitness(self, individual):
+        filled_ratio = []
         trim_loss = []
 
-        for sid, stock in enumerate(individual[0]):
+        for _, stock in enumerate(individual[0]):
             if np.all(stock<0) == False:
                 tl = (stock == -1).sum() / (stock != -2).sum()
                 trim_loss.append(tl)
-
-        result = np.mean(trim_loss).item() if trim_loss else 1
-        return 1-result
+                filled_ratio.append(1)
+            else:
+                filled_ratio.append(0)
+        filled_ratio = np.sum(filled_ratio) / len(filled_ratio)
+        trim_loss = np.mean(trim_loss).item() if trim_loss else 1
+        return (1-filled_ratio)*(1-trim_loss)
 
     def calculate_fitness(self):
         self.fitness_points = [self.evaluate_fitness(ind) for ind in self.population]
 
     def crossover(self):
-        # Lấy các cá thể tốt nhất
         elite_size = self.elite_size_select
         ranked_population = sorted(
             self.population, key=lambda x: self.evaluate_fitness(x), reverse=True
         )
         elite = ranked_population[:elite_size]
-
-        # Sinh các cá thể mới thay thế các cá thể yếu
         offspring = [self.new_individual() for _ in range(self.population_size - elite_size)]
         self.population = elite + offspring
 
@@ -127,22 +109,13 @@ class Policy2352189_2352390_2352170_2352598_2352592(Policy):
             prods_length=0
             for prods_ in self.products:
                 prods_length+=prods_["quantity"]
-            self.max_attempts=prods_length
-        # Đếm tổng số sản phẩm ban đầu
-            #total_products = sum(product["quantity"] for product in self.products)
-            #self.max_attempts = total_products
 
-        # Khởi tạo dân số và tiến hóa
             self.init()
             self.evolve()
-
-        # Sắp xếp dân số theo fitness
             self.population = sorted(self.population, key=lambda x: self.evaluate_fitness(x), reverse=True)
 
-        # Chuyển đổi cá thể tốt nhất sang các hành động
             sheets, product_counts = self.population[0]
 
-        # Chuyển đổi sheets thành danh sách hành động
             for i, _ in enumerate(observation["stocks"]):
                 sheet = sheets[i]
                 W = np.sum(np.any(sheet != -2, axis=1))
@@ -153,7 +126,6 @@ class Policy2352189_2352390_2352170_2352598_2352592(Policy):
                         if pos_val >= 0:
                             curr_prod = self.products[pos_val]
                             w, h = curr_prod["size"]
-                            #w, h = size
                             sheet[y:y + h, x:x + w] = -1
                             action = {
                                 "stock_idx": i,
@@ -161,12 +133,12 @@ class Policy2352189_2352390_2352170_2352598_2352592(Policy):
                                 "position": (x, y)
                             }
                             self.actions.append(action)
+
             if len(self.actions) > 0:
                 action = self.actions[0]
                 self.actions.pop(0)
                 return action
 
-        # Nếu không còn hành động nào, trả về hành động mặc định
             return {"stock_idx": -1, "size": [0, 0], "position": (0, 0)}
     
     def BestFitDecreasing(self, observation, info):
