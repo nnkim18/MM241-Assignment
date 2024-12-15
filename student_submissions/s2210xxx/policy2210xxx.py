@@ -75,18 +75,19 @@ class Greedy(Policy):
         return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
 
 # Hybrid Heuristic-B&B
+import time
+import numpy as np
+
 class BottomLeftHeuristic:
     def __init__(self, allow_rotation=False):
         self.allow_rotation = allow_rotation
 
     def run(self, stocks, demands):
-        # demands: {prod_id: {"size":(h,w), "count":int}}
-        # Sort products by area descending
         items = []
         for pid, d in demands.items():
             for _ in range(d["count"]):
                 items.append((pid, d["size"]))
-        # Sort by max dimension or area
+        # Sort by area descending
         items.sort(key=lambda x: x[1][0]*x[1][1], reverse=True)
 
         solution_stocks = [s.copy() for s in stocks]
@@ -103,20 +104,17 @@ class BottomLeftHeuristic:
                     actions.append({"stock_idx": sid, "size": size, "position": pos})
                     placed = True
                     break
-                # Try rotation if allowed and placement failed
                 if self.allow_rotation:
                     rotated_size = (size[1], size[0])
-                    pos = self.bottom_left_place(stock, rotated_size)
-                    if pos is not None:
-                        self.place_product(solution_stocks[sid], pos, rotated_size)
-                        solution_demands[pid]["count"] -= 1
-                        actions.append({"stock_idx": sid, "size": rotated_size, "position": pos})
-                        placed = True
-                        break
-            if not placed:
-                # Couldn't place this item in any stock
-                pass
-
+                    if rotated_size != size:
+                        pos = self.bottom_left_place(stock, rotated_size)
+                        if pos is not None:
+                            self.place_product(solution_stocks[sid], pos, rotated_size)
+                            solution_demands[pid]["count"] -= 1
+                            actions.append({"stock_idx": sid, "size": rotated_size, "position": pos})
+                            placed = True
+                            break
+            # If not placed, we do nothing (some demands remain unfilled)
         return {
             "stocks": solution_stocks,
             "demands": solution_demands,
@@ -124,20 +122,14 @@ class BottomLeftHeuristic:
         }
 
     def bottom_left_place(self, stock, size):
-        # Bottom-Left heuristic:
-        # Try to place the item as low as possible, then as far left as possible.
         h, w = stock.shape
         ph, pw = size
         free_mask = (stock == -1)
-        best_pos = None
-        # We'll iterate rows from top to bottom (0 to h-1), but we can consider "lowest" as largest index:
-        # If "bottom" is i=0, we should actually iterate normally since we consider row 0 as top.
-        # We'll just consider top-left as (0,0) and go downwards:
         for i in range(h - ph + 1):
             for j in range(w - pw + 1):
                 if np.all(free_mask[i:i+ph, j:j+pw]):
                     return (i, j)
-        return best_pos
+        return None
 
     def place_product(self, stock, pos, size):
         i, j = pos
@@ -150,7 +142,10 @@ class HybridBnB:
         self.episode_initialized = False
         self.precomputed_actions = []
         self.allow_rotation = allow_rotation
-    
+        self.best_solution = None
+        self.best_trim_loss = float('inf')
+        self.start_time = None
+
     def get_action(self, observation, info):
         if not self.episode_initialized:
             self.initialize_episode(observation, info)
@@ -159,7 +154,6 @@ class HybridBnB:
         if self.precomputed_actions:
             return self.precomputed_actions.pop(0)
 
-        # If no actions are left, try a fallback feasible action
         action = self.find_feasible_action(observation)
         if action:
             return action
@@ -170,14 +164,109 @@ class HybridBnB:
         products = observation["products"]
         demands = {i: {"size": tuple(p["size"]), "count": p["quantity"]} for i, p in enumerate(products)}
 
-        # Use the Bottom-Left heuristic to get an initial compact solution
+        # Get initial solution using heuristic
         heuristic = BottomLeftHeuristic(allow_rotation=self.allow_rotation)
         heuristic_solution = heuristic.run(stocks, demands)
 
-        # Optionally, run a B&B or another refinement method here.
-        # For demonstration, we skip that or you can incorporate your previous B&B approach.
+        # Evaluate initial solution
+        initial_trim = self.calculate_trim_loss(heuristic_solution["stocks"])
+        self.best_solution = heuristic_solution
+        self.best_trim_loss = initial_trim
 
-        self.precomputed_actions = heuristic_solution.get("actions", [])
+        # Perform BnB search to try improving the solution
+        # Note: If your problem instance is large, you might need more sophisticated pruning
+        self.start_time = time.perf_counter()
+        self.branch_and_bound(self.best_solution)
+
+        # After BnB, we have best_solution improved if possible
+        self.precomputed_actions = self.best_solution.get("actions", [])
+
+    def branch_and_bound(self, current_solution):
+        # Check time limit
+        if (time.perf_counter() - self.start_time) > self.bnb_time_limit:
+            return
+
+        # If all demands are met, no need to branch further
+        if self.all_placed(current_solution):
+            return
+
+        # Generate children solutions
+        children = self.generate_children(current_solution)
+        for child in children:
+            child_trim = self.calculate_trim_loss(child["stocks"])
+            # Prune if not better
+            if child_trim >= self.best_trim_loss:
+                continue
+            # Update best solution if improved
+            if child_trim < self.best_trim_loss:
+                self.best_trim_loss = child_trim
+                self.best_solution = child
+            # Recurse deeper
+            self.branch_and_bound(child)
+
+    def generate_children(self, solution):
+        # Find the next product that still needs to be placed
+        for prod_id, d in solution["demands"].items():
+            if d["count"] > 0:
+                # Try placing this product in all feasible positions and possibly rotated
+                return self.try_all_placements(solution, prod_id, d["size"])
+        return []
+
+    def try_all_placements(self, solution, prod_id, size):
+        children = []
+        ph, pw = size
+        for stock_idx, stock in enumerate(solution["stocks"]):
+            free_mask = (stock == -1)
+            H, W = stock.shape
+            for i in range(H - ph + 1):
+                for j in range(W - pw + 1):
+                    if np.all(free_mask[i:i+ph, j:j+pw]):
+                        # Create a new child solution
+                        child = self.copy_solution(solution)
+                        self.place_product(child["stocks"][stock_idx], (i,j), size)
+                        child["demands"][prod_id]["count"] -= 1
+                        child["actions"].append({"stock_idx": stock_idx, "size": size, "position": (i,j)})
+                        children.append(child)
+
+            # If rotation allowed, try rotated size if it's different
+            if self.allow_rotation and (ph != pw):
+                rotated_size = (pw, ph)
+                for i in range(H - rotated_size[0] + 1):
+                    for j in range(W - rotated_size[1] + 1):
+                        if np.all(free_mask[i:i+rotated_size[0], j:j+rotated_size[1]]):
+                            child = self.copy_solution(solution)
+                            self.place_product(child["stocks"][stock_idx], (i,j), rotated_size)
+                            child["demands"][prod_id]["count"] -= 1
+                            child["actions"].append({"stock_idx": stock_idx, "size": rotated_size, "position": (i,j)})
+                            children.append(child)
+
+        return children
+
+    def all_placed(self, solution):
+        # Check if all demands are met
+        return all(d["count"] == 0 for d in solution["demands"].values())
+
+    def copy_solution(self, solution):
+        return {
+            "stocks": [s.copy() for s in solution["stocks"]],
+            "demands": {k: v.copy() for k,v in solution["demands"].items()},
+            "actions": solution.get("actions", []).copy()
+        }
+
+    def calculate_trim_loss(self, stocks):
+        total_free = 0
+        total_cells = 0
+        for s in stocks:
+            total_free += np.count_nonzero(s == -1)
+            total_cells += s.size
+        if total_cells > 0:
+            return total_free / total_cells
+        return 0
+
+    def place_product(self, stock, pos, size):
+        i, j = pos
+        ph, pw = size
+        stock[i:i+ph, j:j+pw] = 1
 
     def find_feasible_action(self, observation):
         stocks = observation["stocks"]
@@ -185,10 +274,18 @@ class HybridBnB:
         for i, p in enumerate(products):
             if p["quantity"] > 0:
                 size = tuple(p["size"])
+                # Try to place without rotation
                 for si, stock in enumerate(stocks):
                     pos = self.find_position(stock, size)
                     if pos is not None:
                         return {"stock_idx": si, "size": size, "position": pos}
+                # If allow rotation, try rotated size
+                if self.allow_rotation and (size[0] != size[1]):
+                    rotated_size = (size[1], size[0])
+                    for si, stock in enumerate(stocks):
+                        pos = self.find_position(stock, rotated_size)
+                        if pos is not None:
+                            return {"stock_idx": si, "size": rotated_size, "position": pos}
         return None
 
     def find_position(self, stock, size):
