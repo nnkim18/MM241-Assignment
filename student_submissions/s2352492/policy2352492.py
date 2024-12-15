@@ -1,6 +1,6 @@
 from policy import Policy
 import random
-import numpy as np
+import math
 
 
 class Policy2352492(Policy):
@@ -118,7 +118,7 @@ class Policy2352492(Policy):
                     best_score = new_score
                     best_solution = new_solution[:]
             else:
-                if random.random() < np.exp(-delta/self.temperature):
+                if random.random() < math.exp(-delta/self.temperature):
                     current_solution = new_solution
                     current_score = new_score
 
