@@ -1,7 +1,7 @@
 from policy import Policy
 
 
-class Policy2310359(Policy):
+class Policy2310359_2310376_2310266(Policy):
     def __init__(self):
         # Student code here
         self.skylines = []
