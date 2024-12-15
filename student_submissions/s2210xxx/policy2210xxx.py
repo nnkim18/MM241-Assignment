@@ -1,6 +1,6 @@
 from policy import Policy
 import numpy as np
-class Policy23052005(Policy):
+class Policy2310763(Policy):
     def __init__(self, ma_chinh_sach=1):
         # Đảm bảo mã chính sách hợp lệ
         if ma_chinh_sach == 1:
