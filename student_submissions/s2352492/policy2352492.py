@@ -257,12 +257,6 @@ class Policy2352492(Policy):
         return res
 
     def _initialize_population(self, products, stocks, observation):
-        """
-        Khởi tạo quần thể bằng cách sử dụng bottom-left greedy, 
-        nhưng dùng ma trận nhị phân để kiểm tra chồng lấn nhanh hơn.
-
-        Mỗi cá thể: [(prod_idx, stock_idx, prod_w, prod_h, pos_x, pos_y), ...]
-        """
         population = []
         num_stocks = len(stocks)
 
@@ -281,7 +275,6 @@ class Policy2352492(Policy):
             for pos_y in range(stock_h - prod_h + 1):
                 for pos_x in range(stock_w - prod_w + 1):
                     if can_place(occupied_grid, prod_w, prod_h, pos_x, pos_y):
-                        # Đánh dấu vùng đã chiếm
                         for y in range(pos_y, pos_y + prod_h):
                             for x in range(pos_x, pos_x + prod_w):
                                 occupied_grid[y][x] = True
@@ -389,13 +382,11 @@ class Policy2352492(Policy):
     def _evolve_population(self, population, fitness, stocks, observation):
         new_population = []
 
-        # Elitism: Retain the top individuals
         num_elite = int(self.elitism * self.population_size)
         elite_indices = sorted(range(len(fitness)), key=lambda i: fitness[i])[
             :num_elite]
         new_population.extend([population[i] for i in elite_indices])
 
-        # Selection and reproduction
         while len(new_population) < self.population_size:
             parent1 = self._select_parent(population, fitness)
             parent2 = self._select_parent(population, fitness)
@@ -413,13 +404,6 @@ class Policy2352492(Policy):
         return population[best_idx]
 
     def _crossover(self, parent1, parent2, observation):
-        """
-        Perform crossover by randomly choosing genes from either parent.
-        Sort stocks from large to small based on their area (width * height).
-        If a chosen gene is invalid, attempt rotation and apply bottom-left greedy placement.
-        If placement still fails, randomly decide to rotate or not and search all stocks for a valid position.
-        """
-
         offspring = []
         used_positions = {stock_idx: []
                           for stock_idx in range(len(observation["stocks"]))}
@@ -439,7 +423,6 @@ class Policy2352492(Policy):
 
             if not any(self._is_overlap(pos_x, pos_y, prod_w, prod_h, ox, oy, ow, oh)
                        for ox, oy, ow, oh in used_positions[stock_idx]):
-                # Valid placement, add to offspring
                 offspring.append(gene)
                 used_positions[stock_idx].append(
                     (pos_x, pos_y, prod_w, prod_h))
