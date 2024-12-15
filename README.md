@@ -66,4 +66,5 @@ While the algorithm reduced trim-loss through heuristic-based masking, it failed
 - Limitations in architecture: Lack of decoding mechanisms and overly simplistic encoders.
 - Inefficient reward signals: Inadequate penalization of wasteful actions and insufficient incentivization of compact placements.
 - Restricted exploration: The masking mechanism overly constrained the agent, limiting its ability to learn and generalize.
+
 Despite these challenges, the experiment laid a foundation for improvement, highlighting areas such as integrating Transformer-based architectures and enhancing reward structures to guide the learning process effectively.
