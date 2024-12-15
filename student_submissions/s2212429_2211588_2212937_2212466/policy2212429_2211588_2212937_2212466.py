@@ -111,7 +111,7 @@ class Policy2212429_2211588_2212937_2212466(Policy):
                     if best_pos is not None:
                         break
 
-                print(f"Final Placement: Stock {stock_idx}, Product Size {prod_size}, Position ({pos_x}, {pos_y})")
+                # print(f"Final Placement: Stock {stock_idx}, Product Size {prod_size}, Position ({pos_x}, {pos_y})")
                 return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
 
             case 2:
@@ -151,7 +151,7 @@ class Policy2212429_2211588_2212937_2212466(Policy):
                         pos_x, pos_y = best_pos
                         stock_idx = i
                         break
-                print(f"Final Placement: Stock {stock_idx}, Product Size {prod_size}, Position ({pos_x}, {pos_y})")
+                # print(f"Final Placement: Stock {stock_idx}, Product Size {prod_size}, Position ({pos_x}, {pos_y})")
                 return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
     # Student code here
     # You can add more functions if needed
