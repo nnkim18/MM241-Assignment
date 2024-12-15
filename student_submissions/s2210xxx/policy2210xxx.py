@@ -5,7 +5,7 @@ from student_submissions.s2210xxx.genetic import GeneticPolicy
 
 
 class Policy2210xxx(Policy):
-    def __init__(self, policy_id):
+    def __init__(self, policy_id=1):
         super().__init__()  # Call parent class constructor
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
