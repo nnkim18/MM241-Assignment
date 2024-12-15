@@ -5,7 +5,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from torch.cuda.amp import autocast, GradScaler
-import zipfile
 
 STATE_SIZE = 1000004
 STOCK_SIZE = 100
