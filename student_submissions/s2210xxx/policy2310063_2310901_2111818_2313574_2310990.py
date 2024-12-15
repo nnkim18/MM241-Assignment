@@ -3,7 +3,7 @@ from scipy.optimize import linprog
 from policy import Policy
 class Policy2310063_2310901_2111818_2313574_2310990(Policy):
     def __init__(self, policy_id):
-        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+        #assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         if policy_id == 1:
             self.policy = local_search(policy_id)
         elif policy_id == 2:
