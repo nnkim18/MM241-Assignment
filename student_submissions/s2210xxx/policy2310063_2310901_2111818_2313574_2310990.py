@@ -1,4 +1,4 @@
-import numpy as np
+#import numpy as np
 #from scipy.optimize import linprog
 from policy import Policy
 class Policy2310063_2310901_2111818_2313574_2310990(Policy):
