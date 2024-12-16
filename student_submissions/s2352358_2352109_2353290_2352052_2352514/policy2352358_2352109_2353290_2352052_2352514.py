@@ -3,6 +3,20 @@ import numpy as np
 from abc import abstractmethod
 
 
+class Policy2352358_2352109_2353290_2352052_2352514(Policy):
+    def __init__(self, policy_id: int = 1):
+        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+
+        # Student code here
+        if policy_id == 1:
+            self.strategy = LevelBasedStrategy()
+        elif policy_id == 2:
+            self.strategy = BestFitStrategy()
+
+    def get_action(self, observation, info):
+        return self.strategy.get_action(observation, info)
+    
+    
 class CuttingStockStrategy:
     def _get_stock_size_(self, stock):
         stock_w = np.sum(np.any(stock != -2, axis=1))
@@ -384,17 +398,3 @@ class StockManager:
 
     def get_most_recent_stock(self) -> Stock:
         return self.stocks[-1]
-
-
-class Policy2352358_2352109_2353290_2352052_2352514(Policy):
-    def __init__(self, policy_id: int = 1):
-        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
-
-        # Student code here
-        if policy_id == 1:
-            self.strategy = LevelBasedStrategy()
-        elif policy_id == 2:
-            self.strategy = BestFitStrategy()
-
-    def get_action(self, observation, info):
-        return self.strategy.get_action(observation, info)
