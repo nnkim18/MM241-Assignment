@@ -7,7 +7,7 @@ class Policy2210737_2311075_2213857_2212594_2211122(Policy):
         """
         Initializes the custom policy with a specific ID.
         """
-        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+        assert policy_id in [1, 2, 3], "Policy ID must be 1 or 2 or 3"
         self.policy_id = policy_id  # Store the policy ID for later use
 
     def get_action(self, observation, info):
