@@ -1,4 +1,4 @@
-# Group 125's Submission - Math Modeling Assignment - Semester 241
+# Group 125's Submission - Mathematical Modeling Assignment - Semester 241
 
 ## Group Members
 - Phạm Trương Anh Huy - 2311241
