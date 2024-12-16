@@ -1,7 +1,7 @@
 import numpy as np
 from policy import Policy, RandomPolicy
 
-class FFDPolicy(Policy):
+class policy2252909_2252240_2252656_2352605_FFD(Policy):
     def __init__(self):
         pass
 
@@ -75,7 +75,7 @@ class FFDPolicy(Policy):
             stock["placed"] = []
         stock["placed"].append({"position": position, "size": size})
 
-class BruteForcePolicy(Policy):
+class policy2252909_2252240_2252656_2352605_BruteForce(Policy):
     def __init__(self):
         pass
 
@@ -156,7 +156,7 @@ class BruteForcePolicy(Policy):
             stock["placed"] = []
         stock["placed"].append({"position": position, "size": size})
 
-class DPPolicy(Policy):
+class policy2252909_2252240_2252656_2352605_DP(Policy):
     def __init__(self):
         pass
 
