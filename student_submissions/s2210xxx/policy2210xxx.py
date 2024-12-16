@@ -14,5 +14,3 @@ class Policy2210xxx(Policy):
     def get_action(self, observation, info):
         # Student code here
         pass
-
-    # Student code here
