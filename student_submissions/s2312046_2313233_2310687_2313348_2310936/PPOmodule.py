@@ -32,7 +32,7 @@ class FilterCNN(nn.Module):
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, filter_out, alpha, chkpt_dir='./s2312046_2313233_2310687_2313348_2310936/models'):
+    def __init__(self, filter_out, alpha, chkpt_dir='./models'):
         super(ActorCritic, self).__init__()
         self.checkpoint_file = os.path.join(chkpt_dir, 'ac_torch_ppo1')
         if not os.path.exists(self.checkpoint_file):
