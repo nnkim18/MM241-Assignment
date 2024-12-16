@@ -3,7 +3,24 @@ import random
 import math
 
 
-class Policy2352492(Policy):
+class Policy2352492_2352693_2352852_2352960_2352919(Policy):
+    def __init__(self, policy_id=1):
+        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+        self.temperature = 100.0
+        self.cooling_rate = 0.955
+        self.min_temperature = 0.1
+        self.iterations = 2000
+
+        self.population_size = 100
+        self.generations = 50
+        self.mutation_rate = 0.1
+        self.elitism = 0.1
+
+        self.best = []
+        self.idx = -1
+
+        self.id = policy_id
+
     class SkylinePacker:
         def __init__(self, width, height):
             self.width = width
@@ -49,23 +66,6 @@ class Policy2352492(Policy):
                 else:
                     merged.append(seg)
             self.segments = merged
-
-    def __init__(self, policy_id=1):
-        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
-        self.temperature = 100.0
-        self.cooling_rate = 0.955
-        self.min_temperature = 0.1
-        self.iterations = 2000
-
-        self.population_size = 100
-        self.generations = 50
-        self.mutation_rate = 0.1
-        self.elitism = 0.1
-
-        self.best = []
-        self.idx = -1
-
-        self.id = policy_id
 
     def get_action(self, observation, info):
         if (self.id == 1):
