@@ -2,6 +2,7 @@ from policy import Policy
 import random  
 import numpy as np
 
+
 class Policy2352906_2352805_2352897_2352479_2350016(Policy):
     def __init__(self, policy_id=1,
                  population_size=100,
