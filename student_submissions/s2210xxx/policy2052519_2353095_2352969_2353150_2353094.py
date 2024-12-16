@@ -186,7 +186,7 @@ class ColumnGeneration(Policy):
         return prod_w <= stock_w and prod_h <= stock_h
     
 
-class Policy2052519(Policy):
+class Policy2052519_2353095_2352969_2353150_2353094(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
