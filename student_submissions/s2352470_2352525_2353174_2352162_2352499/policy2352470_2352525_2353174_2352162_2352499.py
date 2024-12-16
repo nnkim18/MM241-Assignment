@@ -1,5 +1,4 @@
 from policy import Policy
-from scipy.optimize import linprog
 
 class Policy2352470_2352525_2353174_2352162_2352499(Policy):
     def __init__(self, policy_id=1):
