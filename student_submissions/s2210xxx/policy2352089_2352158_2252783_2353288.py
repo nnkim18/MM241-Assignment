@@ -299,7 +299,7 @@ class HybridBnB:
         return None
 
 # Integrate into your Policy
-class Policy2210xxx(Policy):
+class Policy2352089_2352158_2252783_2353288(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         super().__init__()
