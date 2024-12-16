@@ -36,7 +36,7 @@ class ActorCritic(nn.Module):
         super(ActorCritic, self).__init__()
         self.checkpoint_file = os.path.join(chkpt_dir, 'ac_torch_ppo1')
         if not os.path.exists(self.checkpoint_file):
-            self.checkpoint_file = os.path.join(chkpt_dir, 'ac_torch_ppo1')
+            self.checkpoint_file = os.path.join('./models', 'ac_torch_ppo1')
         self.actor = nn.Conv2d(1, 1, kernel_size=1)
         self.filter = FilterCNN(filter_out)
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
