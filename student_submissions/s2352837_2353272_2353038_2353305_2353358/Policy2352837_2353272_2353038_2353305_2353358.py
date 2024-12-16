@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import linprog
 from sklearn.cluster import KMeans
 
-class Policy2210xxx(Policy):
+class Policy2352837_2353272_2353038_2353305_2353358(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
