@@ -24,7 +24,6 @@ class Policy2313257_2111682_2313101_2014717_1832026(Policy):
             for y in range(stock_h - prod_h + 1):
                 if self._can_place_(stock, (x, y), prod_size):
                     # Calculate stock used percent
-                    print("Place product in prev stock")
                     self.product_area += prod_w*prod_h
                     is_place = True
                 if is_place == True:
