@@ -11,7 +11,7 @@ STOCK_SIZE = 100
 MAX_X = 100
 MAX_Y = 100
 
-class Policy2312080(Policy):
+class Policy2312080_2312105_2312265_2311289_2313429(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
