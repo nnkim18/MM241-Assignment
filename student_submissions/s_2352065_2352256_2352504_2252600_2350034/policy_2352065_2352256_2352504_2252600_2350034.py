@@ -37,6 +37,7 @@ class brandandbound(Policy):
 
         return self.actions_queue.pop(0)
 
+
     def run_branch_and_bound(self, observation):
         stocks = observation["stocks"]
         products = list(observation["products"])
