@@ -140,7 +140,7 @@ class BranchAndBoundPolicy(Policy):
         return None
 
 
-class Policy2210xxx(Policy):
+class Policy2352582_2352594_2352517(Policy):
     def __init__(self, policy_id=1):
         # Validate policy ID and initialize the corresponding policy
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
