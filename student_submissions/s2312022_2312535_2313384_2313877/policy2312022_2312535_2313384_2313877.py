@@ -1,6 +1,6 @@
 from policy import Policy
 
-class policy2312022_2312535_2313384_2313877(Policy):
+class Policy2312022_2312535_2313384_2313877(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
