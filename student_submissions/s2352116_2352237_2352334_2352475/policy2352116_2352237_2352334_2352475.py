@@ -1,15 +1,15 @@
 # import numpy as np
 # import time
 from policy import Policy
-class Policy2352216_2352237_2352334_2352475(Policy):
+class Policy2352116_2352237_2352334_2352475(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
         self.isFirstSolved= False
         if self.policy_id == 1:
-            self.solution_1 = Policy2352216_2352237_2352334_2352475.Policy2352475()
+            self.solution_1 = Policy2352116_2352237_2352334_2352475.Policy2352475()
         elif self.policy_id == 2:
-            self.solution_2 = Policy2352216_2352237_2352334_2352475.Policy2352237()
+            self.solution_2 = Policy2352116_2352237_2352334_2352475.Policy2352237()
 
     def get_action(self, observation, info):
         if self.policy_id == 1:
@@ -41,7 +41,7 @@ class Policy2352216_2352237_2352334_2352475(Policy):
                     if prod["quantity"] > 0:
                         prod_size = prod["size"]
                         prod_w, prod_h = prod_size
-                        new_product = Policy2352216_2352237_2352334_2352475.Policy2352475.Product(prod_w, prod_h)
+                        new_product = Policy2352116_2352237_2352334_2352475.Policy2352475.Product(prod_w, prod_h)
                         for _ in range(prod["quantity"]):
                             input_prods.append(new_product)
 
@@ -50,16 +50,16 @@ class Policy2352216_2352237_2352334_2352475(Policy):
                 stock_id = 0
                 for stock in stocks:
                     stock_w, stock_h = self._get_stock_size_(stock)
-                    new_stock = Policy2352216_2352237_2352334_2352475.Policy2352475.Stock(stock_id, stock_w, stock_h)
+                    new_stock = Policy2352116_2352237_2352334_2352475.Policy2352475.Stock(stock_id, stock_w, stock_h)
                     stock_id += 1
                     input_stocks.append(new_stock)
 
                 # start_time = time.time()
-                Policy2352216_2352237_2352334_2352475.Policy2352475.place_products_across_stocks(input_stocks, input_prods)
+                Policy2352116_2352237_2352334_2352475.Policy2352475.place_products_across_stocks(input_stocks, input_prods)
                 # end_time = time.time()
                 # time_to_solve = end_time - start_time
                 # Call evaluate_performance and capture the returned metrics
-                # performance_metrics = Policy2352216_2352237_2352334_2352475.Policy2352475.evaluate_performance(input_stocks)
+                # performance_metrics = Policy2352116_2352237_2352334_2352475.Policy2352475.evaluate_performance(input_stocks)
                 # if performance_metrics:
                 #     performance_metrics['time_to_solve'] = time_to_solve
                 #     self.performance.append(performance_metrics)
@@ -111,15 +111,15 @@ class Policy2352216_2352237_2352334_2352475(Policy):
                 # Calculate the two possible cuts
                 if self.width > product.width and self.height > product.height:
                     # Horizontal cut
-                    horizontal_right = Policy2352216_2352237_2352334_2352475.Policy2352475.Area(self.x + product.width, self.y, 
+                    horizontal_right = Policy2352116_2352237_2352334_2352475.Policy2352475.Area(self.x + product.width, self.y, 
                                                     self.width - product.width, self.height)
-                    horizontal_top = Policy2352216_2352237_2352334_2352475.Policy2352475.Area(self.x, self.y + product.height,
+                    horizontal_top = Policy2352116_2352237_2352334_2352475.Policy2352475.Area(self.x, self.y + product.height,
                                                 product.width, self.height - product.height)
                     
                     # Vertical cut
-                    vertical_right = Policy2352216_2352237_2352334_2352475.Policy2352475.Area(self.x + product.width, self.y,
+                    vertical_right = Policy2352116_2352237_2352334_2352475.Policy2352475.Area(self.x + product.width, self.y,
                                                 self.width - product.width, product.height)
-                    vertical_top = Policy2352216_2352237_2352334_2352475.Policy2352475.Area(self.x, self.y + product.height,
+                    vertical_top = Policy2352116_2352237_2352334_2352475.Policy2352475.Area(self.x, self.y + product.height,
                                                 self.width, self.height - product.height)
                     
                     # Choose the cut that minimizes waste
@@ -140,11 +140,11 @@ class Policy2352216_2352237_2352334_2352475(Policy):
                             new_areas.append(vertical_top)
                 elif self.width > product.width:
                     # Only horizontal cut possible
-                    new_areas.append(Policy2352216_2352237_2352334_2352475.Policy2352475.Area(self.x + product.width, self.y,
+                    new_areas.append(Policy2352116_2352237_2352334_2352475.Policy2352475.Area(self.x + product.width, self.y,
                                                 self.width - product.width, self.height))
                 elif self.height > product.height:
                     # Only vertical cut possible
-                    new_areas.append(Policy2352216_2352237_2352334_2352475.Policy2352475.Area(self.x, self.y + product.height,
+                    new_areas.append(Policy2352116_2352237_2352334_2352475.Policy2352475.Area(self.x, self.y + product.height,
                                                 self.width, self.height - product.height))
                 
                 # Sort areas by size (largest first) to promote better space utilization
@@ -156,7 +156,7 @@ class Policy2352216_2352237_2352334_2352475(Policy):
                 self.width = width
                 self.height = height
                 self.area = width * height
-                self.remaining_areas = [Policy2352216_2352237_2352334_2352475.Policy2352475.Area(0, 0, width, height)]
+                self.remaining_areas = [Policy2352116_2352237_2352334_2352475.Policy2352475.Area(0, 0, width, height)]
                 self.placed_products = []
 
             def place_product(self, product):
@@ -207,7 +207,7 @@ class Policy2352216_2352237_2352334_2352475(Policy):
                         # Check if areas can be merged horizontally
                         if (area1.y == area2.y and area1.height == area2.height and 
                             area1.x + area1.width == area2.x):
-                            new_area = Policy2352216_2352237_2352334_2352475.Policy2352475.Area(area1.x, area1.y, 
+                            new_area = Policy2352116_2352237_2352334_2352475.Policy2352475.Area(area1.x, area1.y, 
                                                     area1.width + area2.width, area1.height)
                             self.remaining_areas.pop(j)
                             self.remaining_areas[i] = new_area
@@ -216,7 +216,7 @@ class Policy2352216_2352237_2352334_2352475(Policy):
                         # Check if areas can be merged vertically
                         if (area1.x == area2.x and area1.width == area2.width and 
                             area1.y + area1.height == area2.y):
-                            new_area = Policy2352216_2352237_2352334_2352475.Policy2352475.Area(area1.x, area1.y,
+                            new_area = Policy2352116_2352237_2352334_2352475.Policy2352475.Area(area1.x, area1.y,
                                                     area1.width, area1.height + area2.height)
                             self.remaining_areas.pop(j)
                             self.remaining_areas[i] = new_area
