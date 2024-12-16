@@ -309,7 +309,6 @@ class Policy2352259_2353214_2353174(Policy):
         fragmented_cell_count = np.sum(fragmented_cells)
         fragmentation_penalty = fragmented_cell_count / total_area
 
-        # Contact Scoring
         # Each occupied cell can have up to 4 contacts (up, down, left, right)
         shifts = [(-1,0), (1,0), (0,-1), (0,1)]
         contact_total = 0
