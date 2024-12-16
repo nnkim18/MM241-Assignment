@@ -281,7 +281,7 @@ class Policy2(Policy):
         return arrangements
 
 
-class Policy2250013(Policy):
+class Policy2250013_2352750_2353056_2252731(Policy):
     """
     A composite policy class that delegates actions to either Policy1 or Policy2
     based on a specified policy ID during initialization.
@@ -330,7 +330,7 @@ if __name__ == '__main__':
     observation, info = env.reset(seed=42)
     print(info)
 
-    policy2210xxx = Policy2250013(policy_id=2)
+    policy2210xxx = Policy2250013_2352750_2353056_2252731(policy_id=2)
     for _ in range(200):
         action = policy2210xxx.get_action(observation, info)
         observation, reward, terminated, truncated, info = env.step(action)
