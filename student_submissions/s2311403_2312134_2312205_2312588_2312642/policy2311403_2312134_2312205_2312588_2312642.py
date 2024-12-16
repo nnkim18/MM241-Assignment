@@ -1,6 +1,5 @@
 from policy import Policy
 import numpy as np
-from scipy.optimize import linprog
 
 class MaximalRectangle:
     def __init__(self, width, height):
