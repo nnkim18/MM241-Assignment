@@ -140,6 +140,20 @@ class BranchAndBoundPolicy(Policy):
         return None
 
 
+class Policy2210xxx(Policy):
+    def __init__(self, policy_id=1):
+        # Validate policy ID and initialize the corresponding policy
+        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+
+        if policy_id == 1:
+            self.policy = FFDPoicy() #Use FFD algoritm
+        elif policy_id == 2:
+            self.policy = BranchAndBoundPolicy()  # Use the Branch and Bound algorithm
+
+    def get_action(self, observation, info):
+        # Delegate the get_action call to the selected policy
+        return self.policy.get_action(observation, info)
+
 
 
 
