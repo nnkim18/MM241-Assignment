@@ -16,4 +16,3 @@ class Policy2210xxx(Policy):
         pass
 
     # Student code here
-    # You can add more functions if needed
