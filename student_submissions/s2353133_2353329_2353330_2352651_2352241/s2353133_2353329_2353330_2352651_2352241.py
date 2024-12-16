@@ -2,13 +2,32 @@ from policy import Policy
 from collections import deque
 import numpy as np
 import copy
+
+class Policy2353133_2353329_2353330_2352651_2352241(Policy):
+    def __init__(self, policy_id=1):
+        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+
+        # Student code here
+        if policy_id == 1:
+            self.policy = Bottom_left_fill()
+        elif policy_id == 2:
+            self.policy = Genetic_algorithm()
+
+    def get_action(self, observation, info):
+        # Student code here
+        return self.policy.get_action(observation, info)
+
+    # Student code here
+    # You can add more functions if needed
+
 """
 This is the bottom-left fill policy for the cutting stock problem.
 The policy picks a product that has quantity > 0, then it loops through all stocks to find the best position to place the product.
 The product is rotated if it can't fit in the stock.
 The policy returns the action with the stock index, product size, and position.
 """
-class Policy2353329_1(Policy):
+
+class Bottom_left_fill(Policy):
     def __init__(self):
         pass
     def get_action(self, observation, info):
@@ -66,7 +85,7 @@ Keeps the best combinations and inserts them to the output queue.
 Take the next action from the output queue by each call of the get_action function.
 When the output queue is empty, generate the new combination for the next stock and repeat the process.
 """
-class Policy2353329_2(Policy):
+class Genetic_algorithm(Policy):
     def __init__(self):
         self.population_size = 4 # Should be even number
         self.num_generations = 2
