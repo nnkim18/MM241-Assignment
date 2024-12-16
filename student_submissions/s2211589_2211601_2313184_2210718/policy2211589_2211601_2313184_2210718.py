@@ -3,7 +3,7 @@ from scipy.optimize import linprog
 
 import numpy as np
 
-class Policy2210xxx(Policy):
+class Policy2211589_2211601_2313184_2210718(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
