@@ -1,6 +1,6 @@
 from policy import Policy
-from .policies.floorceil import FloorCeil
-from .policies.genetic import GeneticPolicy
+from .floorceil import FloorCeil
+from .genetic import GeneticPolicy
 
 
 class Policy2352819_2211073_2352455_2352137_2353031(Policy):
