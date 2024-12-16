@@ -1,6 +1,5 @@
 from policy import Policy
-import random
-import numpy as np
+
 
 def Policy2210xxx(Policy):
     def __init__(self, policy_id=1):
@@ -14,16 +13,6 @@ def Policy2210xxx(Policy):
 
     def get_action(self, observation, info):
         # Student code here
-        Genome = list[int]
-        Population = list[Genome]
-        def generate_genome(int) -> Genome
-            return random.choices(0, 1, )
-        def selection():
-
-        def fitness(genome: Genome, pieces: [Piece], weightLimits: int):
-
-        def mutation():
-
         pass
 
     # Student code here
