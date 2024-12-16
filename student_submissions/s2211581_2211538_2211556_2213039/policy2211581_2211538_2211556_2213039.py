@@ -1,5 +1,19 @@
 from policy import Policy
 
+class Policy2211581_2211538_2211556_2213039(Policy):
+    def __init__(self, policy_id=1):
+        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
+
+        # Student code here
+        if policy_id == 1:
+           self.policy = DynamicPriorityPolicyKnapsack()
+        elif policy_id == 2:
+           self.policy = DynamicPriorityPolicyV2()
+
+    def get_action(self, observation, info):
+        # Student code here
+        return self.policy.get_action(observation, info)
+
 class DynamicPriorityPolicyV2(Policy):
     def __init__(self, efficiency_weight=0.5, area_weight=0.5):
         self.efficiency_weight = efficiency_weight
@@ -127,16 +141,4 @@ class DynamicPriorityPolicyKnapsack(Policy):
 
         return placement_options
 
-class Policy2211581_2211538_2211556_2213039(Policy):
-    def __init__(self, policy_id=1):
-        assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
-        # Student code here
-        if policy_id == 1:
-           self.policy = DynamicPriorityPolicyKnapsack()
-        elif policy_id == 2:
-           self.policy = DynamicPriorityPolicyV2()
-
-    def get_action(self, observation, info):
-        # Student code here
-        return self.policy.get_action(observation, info)
