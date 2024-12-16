@@ -2,7 +2,7 @@ import numpy as np
 from policy import Policy
 
 
-class Policy2352967(Policy):
+class Policy2352967_2352758_2352968_2353139_2352495(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
