@@ -4,7 +4,7 @@ author: Lương Minh Thuận  - 2313348
 Time: Dec, 2024
 '''
 
-from s2312046_2313233_2310687_2313348_2310936.PPOmodule import *
+from .PPOmodule import *
 import numpy as np
 import matplotlib.pyplot as plt
 from policy import Policy
