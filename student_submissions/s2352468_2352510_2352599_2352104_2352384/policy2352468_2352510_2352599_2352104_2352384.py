@@ -10,7 +10,7 @@ class Policy2352468_2352510_2352599_2352104_2352384(Policy):
         if policy_id == 1:
             self.policy = ColumnGeneration() # Column Generation
         elif policy_id == 2:
-            self.policy = BranchAndBound() # Branch and Bound
+            self.policy = BranchAndBound() # Branch & Bound
 
     def get_action(self, observation, info):
         if self.policy_id == 1:
