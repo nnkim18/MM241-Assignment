@@ -1,8 +1,8 @@
 from policy import Policy
 import numpy as np
 from scipy.optimize import linprog
-from student_submissions.s2210xxx.CG_algorithm import ColunmGeneraton
-from student_submissions.s2210xxx.Genetic_algorithm import Genetic
+from student_submissions.s2211315_2213705_2211571.CG_algorithm import ColunmGeneraton
+from student_submissions.s2211315_2213705_2211571.Genetic_algorithm import Genetic
 
 class Policy2211315_2213705_2211571(Policy):
     def __init__(self, policy_id=1):
