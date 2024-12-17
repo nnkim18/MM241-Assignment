@@ -1,5 +1,4 @@
 from numpy import empty, stack
-import numpy
 from policy import Policy
 import numpy as np
 
