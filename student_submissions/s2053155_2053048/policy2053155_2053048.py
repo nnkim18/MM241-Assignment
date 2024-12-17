@@ -10,9 +10,9 @@ class Policy2053155_2053048(Policy):
         elif policy_id == 2:
             self.policy = 2
 
-        # self.policy_id = policy_id
-        # self.last_prod = None
-        # self.last_stock_idx = -1
+        self.policy_id = policy_id
+        self.last_prod = None
+        self.last_stock_idx = -1
 
     def get_action(self, observation, info):
         if self.policy_id == 1:
