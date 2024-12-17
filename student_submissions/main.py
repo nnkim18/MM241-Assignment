@@ -1,7 +1,7 @@
 import gym_cutting_stock
 import gymnasium as gym
 from policy import GreedyPolicy, RandomPolicy
-from student_submissions.s2210xxx.policy2052519_2353095_2352969_2353150_2353094 import Policy2052519_2353095_2352969_2353150_2353094
+from student_submissions.s2052519_2353095_2352969_2353150_2353094.policy2052519_2353095_2352969_2353150_2353094 import Policy2052519_2353095_2352969_2353150_2353094
 
 # Create the environment
 env = gym.make(
