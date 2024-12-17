@@ -1,6 +1,6 @@
 from policy import Policy
 
-class Policy2210xxx(Policy):
+class Policy2311237_2252726_2012646_2420001_2311191(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
@@ -22,7 +22,6 @@ class Policy2210xxx(Policy):
 
     # Student code here
     def policy1(self, observation, info):
-        print("ONEEEEE")
         list_prods = observation["products"]
         stock_idx=-1
         prod_size=[0, 0]
@@ -110,7 +109,6 @@ class Policy2210xxx(Policy):
 
 
     def policy2(self, observation, info):
-        print("222222222222")
         list_prods = sorted(
             observation["products"],
             key=lambda p: p["size"][1],  # Sort by height (size[1])
