@@ -2,7 +2,8 @@ import numpy as np
 from scipy.optimize import linprog
 from policy import Policy
 
-class Policy2353061(Policy):  # Best-fit approach
+
+class Policy2353061_2353013_2352686(Policy):  # Best-fit approach
     def __init__(self, policy_id=1):
         super().__init__()
         self.policy_id = policy_id
@@ -43,14 +44,17 @@ class Policy2353061(Policy):  # Best-fit approach
 
                     if self._can_place_(stock, (x, y), (product_width, product_height)):
                         proximity_to_edges = x + y
-                        new_area = max(current_height, y + product_height) * max(current_width, x + product_width)
-                        area_increase = (new_area - current_width * current_height) / (product_width * product_height)
+                        new_area = max(current_height, y + product_height) * \
+                            max(current_width, x + product_width)
+                        area_increase = (
+                            new_area - current_width * current_height) / (product_width * product_height)
                         fit_score = area_increase + proximity_to_edges / 10
 
                         if fit_score < best_fit_score:
                             best_fit_score = fit_score
                             chosen_position = (x, y)
-                            chosen_orientation = (product_width, product_height)
+                            chosen_orientation = (
+                                product_width, product_height)
 
         return chosen_position, chosen_orientation
 
@@ -64,7 +68,8 @@ class Policy2353061(Policy):  # Best-fit approach
     def get_action(self, observation, info):
         if info["filled_ratio"] == 0:
             self.__init__(policy_id=self.policy_id)
-            self.total_product_area = sum(np.prod(prod["size"]) * prod["quantity"] for prod in observation["products"])
+            self.total_product_area = sum(
+                np.prod(prod["size"]) * prod["quantity"] for prod in observation["products"])
             self.remaining_product_area = self.total_product_area
 
             self.sorted_stocks = sorted(
@@ -88,7 +93,8 @@ class Policy2353061(Policy):  # Best-fit approach
                     continue
 
                 orientations = self._generate_orientations(product)
-                chosen_position, chosen_orientation = self._find_best_position(stock, product, orientations)
+                chosen_position, chosen_orientation = self._find_best_position(
+                    stock, product, orientations)
 
                 if chosen_position:
                     product["quantity"] -= 1
@@ -145,7 +151,8 @@ class Policy2352686(Policy):  # Column generation approach
         num_products = len(self.products)
         stock_width, stock_height = self.stock_size
 
-        dual_values = self.dual_values if self.dual_values is not None else np.zeros(num_products)
+        dual_values = self.dual_values if self.dual_values is not None else np.zeros(
+            num_products)
         profit = dual_values
         new_pattern = np.zeros(num_products)
         remaining_area = stock_width * stock_height

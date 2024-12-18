@@ -2,18 +2,20 @@ import numpy as np
 from policy import Policy
 
 
-class Policy2353205_2352674_2352035_2353040_2352646__Group54(Policy):
+class Policy2353205_2352674_2352035_2353040_2352646(Policy):
     def __init__(self, policy_id):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         if policy_id == 1:
             self.policy = Policy2352674(policy_id)
         elif policy_id == 2:
             self.policy = Policy2353205(policy_id)
+
     def get_action(self, observation, info):
         return self.policy.get_action(observation, info)
 
+
 class Policy2352674(Policy):
-    def __init__(self, policy_id = 1):
+    def __init__(self, policy_id=1):
         super().__init__()
         self.policy_id = policy_id
         self.current_stock_index = 0
@@ -22,7 +24,7 @@ class Policy2352674(Policy):
         self.total_product_area = 0
         self.remaining_area = 0
 
-    def reset(self, observation = None):
+    def reset(self, observation=None):
         self.current_stock_index = 0
         self.sorted_stocks = []
         self.remaining_products = []
@@ -81,7 +83,8 @@ class Policy2352674(Policy):
                             for y in range(stock_height - rotated_height + 1):
                                 if self._can_place_(stock, (x, y), (rotated_width, rotated_height)):
                                     product["quantity"] -= 1
-                                    self.remaining_area -= np.prod((rotated_width, rotated_height))
+                                    self.remaining_area -= np.prod(
+                                        (rotated_width, rotated_height))
                                     return {
                                         "stock_idx": stock_idx,
                                         "size": [rotated_width, rotated_height],
@@ -141,10 +144,10 @@ class Policy2352674(Policy):
 
         # No valid placement found
         return {"stock_idx": -1, "size": [0, 0], "position": (-1, -1)}
-    
+
 
 class Policy2353205(Policy):
-    def __init__(self, policy_id = 2):
+    def __init__(self, policy_id=2):
         super().__init__()
         self.policy_id = policy_id
 
@@ -162,10 +165,11 @@ class Policy2353205(Policy):
         # Sắp xếp stock theo diện tích từ lớn đến nhỏ nhưng giữ chỉ mục
         sorted_stocks = sorted(stock_sizes, key=lambda x: x[1], reverse=True)
         stock_idx_sort = [stock[0] for stock in sorted_stocks]
-        
+
         # Sắp xếp các sản phẩm theo diện tích từ lớn đến nhỏ
-        products_sorted = sorted(products, key=lambda x: x['size'][0] * x['size'][1], reverse=True)
-        
+        products_sorted = sorted(
+            products, key=lambda x: x['size'][0] * x['size'][1], reverse=True)
+
         # Duyệt qua các stock và sản phẩm để thực hiện hành động
         for j in stock_idx_sort:
             stock = stocks[j]
@@ -173,7 +177,7 @@ class Policy2353205(Policy):
                 if product['quantity'] > 0:
                     w, h = product['size']
                     # Tìm các vị trí hợp lệ để cắt sản phẩm
-                    for x in range(stock.shape[1]): 
+                    for x in range(stock.shape[1]):
                         for y in range(stock.shape[0]):
                             if (stock[x, y] != -1):
                                 continue
@@ -183,14 +187,14 @@ class Policy2353205(Policy):
                                     "size": (w, h),
                                     "position": (x, y)
                                 }
-                            if self.can_place(stock,(h, w), (x, y)):
+                            if self.can_place(stock, (h, w), (x, y)):
                                 return {
                                     "stock_idx": j,
                                     "size": (h, w),
                                     "position": (x, y)
                                 }
         return None
-                    
+
     def calculate_valid_area(self, stock):
         valid_positions = np.where(stock == -1)
 
@@ -211,4 +215,3 @@ class Policy2353205(Policy):
         if np.any(stock[x:x + w, y:y + h] != -1):
             return False
         return True
-

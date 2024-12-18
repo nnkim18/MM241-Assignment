@@ -2,18 +2,19 @@ import numpy as np
 import random
 from policy import Policy
 
-class Policy2352626(Policy):
+
+class Policy2352626_2352286_2352769_2352860_2353028(Policy):
     def __init__(self, policy_id=2, stocks=None, products=None):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
-        
+
         # Cấu hình chung
         self.stocks = stocks if stocks is not None else []
         self.products = products if products is not None else []
-        
+
         # Cấu hình A2C
         self._init_a2c_config()
-        
+
         # Cấu hình Heuristic
         self.heuristic_optimizer = HeuristicOptimizer()
 
@@ -46,7 +47,7 @@ class Policy2352626(Policy):
 
     def _get_a2c_action(self, observation, info):
         state = self._get_state_key(observation, info)
-        
+
         # Khởi tạo state nếu chưa tồn tại
         if state not in self.q_table:
             self.q_table[state] = {}
@@ -58,16 +59,19 @@ class Policy2352626(Policy):
             action = self._ffd_action(observation)
         else:
             action = self._sample_action(observation, state)
-        
+
         return action
 
     def _get_heuristic_action(self, observation, info):
         return self.heuristic_optimizer.get_action(observation, info)
+
     def _get_state_key(self, observation, info):
         return str(observation)
+
     def _ffd_action(self, observation):
         """First Fit Decreasing (FFD) heuristic for action selection."""
-        products = sorted(observation["products"], key=lambda p: p["size"][0] * p["size"][1], reverse=True)
+        products = sorted(
+            observation["products"], key=lambda p: p["size"][0] * p["size"][1], reverse=True)
 
         for product in products:
             if product["quantity"] > 0:
@@ -108,8 +112,10 @@ class Policy2352626(Policy):
                 break
 
         if action_space:
-            action_indices = [self._get_action_index(action) for action in action_space]
-            q_values = np.array([self.q_table[state].get(idx, 0) for idx in action_indices])
+            action_indices = [self._get_action_index(
+                action) for action in action_space]
+            q_values = np.array([self.q_table[state].get(idx, 0)
+                                for idx in action_indices])
             probabilities = self._softmax(q_values)
 
             # Save policy probabilities for entropy calculation
@@ -132,7 +138,8 @@ class Policy2352626(Policy):
     def sample_experiences(self, batch_size=2):
         priorities = np.array(self.priority_weights) ** self.priority_alpha
         probabilities = priorities / np.sum(priorities)
-        indices = np.random.choice(len(self.replay_buffer), batch_size, p=probabilities)
+        indices = np.random.choice(
+            len(self.replay_buffer), batch_size, p=probabilities)
         experiences = [self.replay_buffer[i] for i in indices]
 
         # Importance-sampling weights
@@ -143,7 +150,8 @@ class Policy2352626(Policy):
 
     def update_priorities(self, indices, td_errors):
         for idx, error in zip(indices, td_errors):
-            self.priority_weights[idx] = abs(error) + 1e-6  # Avoid zero priority
+            self.priority_weights[idx] = abs(
+                error) + 1e-6  # Avoid zero priority
 
     def compute_multi_step_return(self, rewards, value_next_state):
         discounted_return = 0
@@ -176,17 +184,19 @@ class Policy2352626(Policy):
 
         # Compute Advantage
         delta = reward + self.gamma * max_next_q - current_q
-        advantage = delta + self.gae_lambda * self.gamma * (value_next_state - value_current_state)
+        advantage = delta + self.gae_lambda * self.gamma * \
+            (value_next_state - value_current_state)
 
         # Update Q-table using Advantage estimation
         self.q_table[state][action_idx] += self.actor_lr * advantage
 
         # Incorporate entropy regularization
-        entropy = -np.sum(self.policy_table[state] * np.log(self.policy_table[state] + 1e-8))
+        entropy = - \
+            np.sum(self.policy_table[state] *
+                   np.log(self.policy_table[state] + 1e-8))
         self.q_table[state][action_idx] += self.entropy_beta * entropy
 
         return td_error
-
 
     def step(self, observation, action, reward, next_observation, info):
         state = self._get_state_key(observation, info)
@@ -196,16 +206,19 @@ class Policy2352626(Policy):
             self.q_table[next_state] = {}
             self.value_table[next_state] = 0
 
-        self.store_experience(observation, action, reward, next_observation, info.get("done", False))
+        self.store_experience(observation, action, reward,
+                              next_observation, info.get("done", False))
 
         if len(self.replay_buffer) >= 32:  # Perform batch updates when enough experiences are stored
             batch, indices, weights = self.sample_experiences()
             td_errors = []
             for (obs, act, rew, next_obs, done), weight in zip(batch, weights):
                 td_error = self.update_q_table(
-                    self._get_state_key(obs, {}), act, self._get_state_key(next_obs, {}), rew, done
+                    self._get_state_key(obs, {}), act, self._get_state_key(
+                        next_obs, {}), rew, done
                 )
-                td_errors.append(td_error * weight)  # Scale TD-error by importance-sampling weight
+                # Scale TD-error by importance-sampling weight
+                td_errors.append(td_error * weight)
             self.update_priorities(indices, td_errors)
 
         return self.get_action(next_observation, info)
@@ -233,14 +246,15 @@ class Policy2352626(Policy):
         max_q = np.max(q_values) if len(q_values) > 0 else 0
         exp_q = np.exp(q_values - max_q)  # For numerical stability
         return exp_q / np.sum(exp_q) if np.sum(exp_q) > 0 else np.ones_like(q_values) / len(q_values)
-    
+
+
 class HeuristicOptimizer:
     def get_action(self, observation, info):
         list_prods = observation["products"]
         # Sắp xếp sản phẩm theo diện tích giảm dần
         sorted_prods = sorted(
-            [prod for prod in list_prods if prod["quantity"] > 0], 
-            key=lambda x: x["size"][0] * x["size"][1], 
+            [prod for prod in list_prods if prod["quantity"] > 0],
+            key=lambda x: x["size"][0] * x["size"][1],
             reverse=True
         )
 
@@ -258,18 +272,18 @@ class HeuristicOptimizer:
 
                 # Tìm vị trí tối ưu
                 position = self._find_best_stock_position(stock, prod_size)
-                
+
                 if position is not None:
                     return {
-                        "stock_idx": stock_idx, 
-                        "size": prod_size, 
+                        "stock_idx": stock_idx,
+                        "size": prod_size,
                         "position": position
                     }
 
         # Nếu không thể đặt sản phẩm, sử dụng RandomPolicy
         return {
-            "stock_idx": random.randint(0, len(observation["stocks"]) - 1), 
-            "size": sorted_prods[0]["size"], 
+            "stock_idx": random.randint(0, len(observation["stocks"]) - 1),
+            "size": sorted_prods[0]["size"],
             "position": (0, 0)
         }
 
@@ -281,13 +295,13 @@ class HeuristicOptimizer:
     def _can_place_(self, stock, position, prod_size):
         pos_x, pos_y = position
         prod_w, prod_h = prod_size
-        return np.all(stock[pos_x : pos_x + prod_w, pos_y : pos_y + prod_h] == -1)
+        return np.all(stock[pos_x: pos_x + prod_w, pos_y: pos_y + prod_h] == -1)
 
     def _find_best_stock_position(self, stock, prod_size):
         """Tìm vị trí đặt sản phẩm với diện tích thừa nhỏ nhất"""
         prod_w, prod_h = prod_size
         stock_w, stock_h = self._get_stock_size_(stock)
-        
+
         min_waste = float('inf')
         best_pos = None
 
@@ -305,5 +319,3 @@ class HeuristicOptimizer:
                         best_pos = (x, y)
 
         return best_pos
-
-

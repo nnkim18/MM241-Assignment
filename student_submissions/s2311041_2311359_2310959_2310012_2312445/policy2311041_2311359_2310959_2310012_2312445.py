@@ -21,11 +21,13 @@ def PG(stock_length, product_widths, required_widths):
     def backtrack(level, current_pattern, leftover):
         if level == num_products:
             # Tìm các chỉ số của các chiều rộng trong required_widths có trong product_widths
-            required_indices = [product_widths.index(w) for w in required_widths if w in product_widths]
+            required_indices = [product_widths.index(
+                w) for w in required_widths if w in product_widths]
 
             # Kiểm tra điều kiện:
             if required_indices:
-                condition = any(current_pattern[i] > 0 for i in required_indices)
+                condition = any(
+                    current_pattern[i] > 0 for i in required_indices)
             else:
                 condition = True
 
@@ -69,10 +71,10 @@ def Matrix(stock_size, product_size):
     first_dimension = [pair[0] for pair in product_sorted]
     unique_first_dimension = list(set(first_dimension))
     unique_first_dimension.sort()
-    ##Tạo block 1
+    # Tạo block 1
     block_1 = PG(stock_size[0], unique_first_dimension, [-1])
     new_matrix = np.zeros((len(product_sorted), block_1.shape[1]), dtype=int)
-    ##Tạo block sau
+    # Tạo block sau
     second_dimension = [pair[1] for pair in product_sorted]
     current_length = None
     all_widths_so_far = []
@@ -81,15 +83,19 @@ def Matrix(stock_size, product_size):
     for length, width in product_sorted:
         if length != current_length:
             if current_length is not None:
-                pattern_matrix = PG(stock_size[1], all_widths_so_far, widths_for_this_length)
+                pattern_matrix = PG(
+                    stock_size[1], all_widths_so_far, widths_for_this_length)
                 if new_matrix.shape[0] != pattern_matrix.shape[0]:
-                    max_rows = max(new_matrix.shape[0], pattern_matrix.shape[0])
+                    max_rows = max(
+                        new_matrix.shape[0], pattern_matrix.shape[0])
                     # Thêm các hàng 0 để khớp kích thước
-                    new_matrix = np.pad(new_matrix, ((0, max_rows - new_matrix.shape[0]), (0, 0)), mode='constant')
+                    new_matrix = np.pad(
+                        new_matrix, ((0, max_rows - new_matrix.shape[0]), (0, 0)), mode='constant')
                     pattern_matrix = np.pad(pattern_matrix, ((0, max_rows - pattern_matrix.shape[0]), (0, 0)),
                                             mode='constant')
                 new_matrix = np.hstack((new_matrix, pattern_matrix))
-                new_block = np.zeros((block_1.shape[0], pattern_matrix.shape[1]))
+                new_block = np.zeros(
+                    (block_1.shape[0], pattern_matrix.shape[1]))
                 new_block[row_index, :] = -1
                 block_1 = np.hstack((block_1, new_block))
                 row_index += 1
@@ -100,7 +106,8 @@ def Matrix(stock_size, product_size):
             widths_for_this_length.append(width)
             all_widths_so_far += [width]
     if current_length is not None:
-        pattern_matrix = PG(stock_size[1], all_widths_so_far, widths_for_this_length)
+        pattern_matrix = PG(
+            stock_size[1], all_widths_so_far, widths_for_this_length)
         new_matrix = np.hstack((new_matrix, pattern_matrix))
 
         # Tạo new_block và gộp vào block_1
@@ -109,19 +116,21 @@ def Matrix(stock_size, product_size):
         block_1 = np.hstack((block_1, new_block))
     result = np.vstack((block_1, new_matrix))
     # In ra danh sách đã sắp xếp (tuỳ chọn)
-    ##print( result)
+    # print( result)
 
     return result  # Trả về danh sách đã sắp xếp
 
-class Policy2210xxx(Policy):
+
+class Policy2311041_2311359_2310959_2310012_2312445(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
         # Student code here
         if policy_id == 1:
-            self.policy = abc();
+            self.policy = abc()
         elif policy_id == 2:
-            self.policy = xyz();
+            self.policy = xyz()
+
     def get_action(self, observation, info):
         # Student code here
         # Gọi phương thức `get_action` của thuật toán được chọn
@@ -131,12 +140,15 @@ class Policy2210xxx(Policy):
 def load_data_from_json(filename):
     with open(filename, 'r') as file:
         return json.load(file)
+
+
 class abc(Policy):
     def __init__(self, policy_id=1):
         self.current_patterns = None
         self.current_solution = None
         self.pattern_index = 0
-    def get_action(self, observation, info):        
+
+    def get_action(self, observation, info):
         # Reset pattern index if we're starting with new products
         if self.current_patterns is None or self.pattern_index >= len(self.current_solution):
             # Extract product sizes and quantities from observation
@@ -198,7 +210,8 @@ class abc(Policy):
                         break
 
                 # Get corresponding product
-                active_prods = [p for p in observation["products"] if p["quantity"] > 0]
+                active_prods = [
+                    p for p in observation["products"] if p["quantity"] > 0]
                 if prod_idx < len(active_prods):
                     prod = active_prods[prod_idx]
                     prod_size = prod["size"]
@@ -238,13 +251,14 @@ class abc(Policy):
         self.current_solution = None
         self.pattern_index = 0
         return {"stock_idx": 0, "size": [0, 0], "position": (0, 0)}
-    
+
 
 class xyz(Policy):
-    def __init__(self,policy=2):
+    def __init__(self, policy=2):
         self.current_stock_idx = 0
         self.current_level = 0
         self.max_height = 0
+
     def get_action(self, observation, info):
         stocks = observation["stocks"]
         sorted_products = self._sort_products(observation["products"])
@@ -259,7 +273,8 @@ class xyz(Policy):
 
                 prod_size = product["size"]
                 # Tìm góc tốt nhất để đặt sản phẩm
-                best_pos = self._find_best_corner(stock, prod_size, stock_h, stock_w)
+                best_pos = self._find_best_corner(
+                    stock, prod_size, stock_h, stock_w)
                 if best_pos:
                     return {
                         "stock_idx": stock_idx,
@@ -269,7 +284,8 @@ class xyz(Policy):
 
                 # Thử xoay sản phẩm nếu không tìm được vị trí
                 rotated_size = prod_size[::-1]
-                best_pos = self._find_best_corner(stock, rotated_size, stock_h, stock_w)
+                best_pos = self._find_best_corner(
+                    stock, rotated_size, stock_h, stock_w)
                 if best_pos:
                     return {
                         "stock_idx": stock_idx,

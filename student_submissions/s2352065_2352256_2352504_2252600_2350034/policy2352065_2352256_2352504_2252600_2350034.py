@@ -3,7 +3,8 @@ import numpy as np
 import random
 import math
 
-class Policy_2352065_2352256_2352504_2252600_2350034:
+
+class Policy2352065_2352256_2352504_2252600_2350034(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         if policy_id == 1:
@@ -23,9 +24,10 @@ class brandandbound(Policy):
         products = observation["products"]
         total_qty = sum(p["quantity"] for p in products)
         if total_qty == 0:
-            return {"stock_idx":0,"size":[1,1],"position":(0,0)}
+            return {"stock_idx": 0, "size": [1, 1], "position": (0, 0)}
 
-        current_products_key = tuple((p["size"][0], p["size"][1], p["quantity"]) for p in products)
+        current_products_key = tuple(
+            (p["size"][0], p["size"][1], p["quantity"]) for p in products)
         if current_products_key != getattr(self, 'last_products_info', None):
             self.last_products_info = current_products_key
             self.actions_queue = []
@@ -33,10 +35,9 @@ class brandandbound(Policy):
             self.run_branch_and_bound(observation)
 
         if not getattr(self, 'solved', False) or len(getattr(self, 'actions_queue', [])) == 0:
-            return {"stock_idx":0,"size":[1,1],"position":(0,0)}
+            return {"stock_idx": 0, "size": [1, 1], "position": (0, 0)}
 
         return self.actions_queue.pop(0)
-
 
     def run_branch_and_bound(self, observation):
         stocks = observation["stocks"]
@@ -47,7 +48,8 @@ class brandandbound(Policy):
             h = np.sum(np.any(s != -2, axis=0))
             stock_info.append((i, w, h))
         stock_info.sort(key=lambda x: x[1]*x[2])
-        products = [{"size":p["size"].copy(),"quantity":p["quantity"]} for p in products]
+        products = [{"size": p["size"].copy(), "quantity": p["quantity"]}
+                    for p in products]
         solution = []
 
         def total_free_area(stocks):
@@ -55,23 +57,23 @@ class brandandbound(Policy):
             for s in stocks:
                 stock_w = np.sum(np.any(s != -2, axis=1))
                 stock_h = np.sum(np.any(s != -2, axis=0))
-                free_cells = np.sum(s[:stock_w,:stock_h] == -1)
+                free_cells = np.sum(s[:stock_w, :stock_h] == -1)
                 area += free_cells
             return area
 
         def try_place_product(stock, w, h):
             stock_w = np.sum(np.any(stock != -2, axis=1))
             stock_h = np.sum(np.any(stock != -2, axis=0))
-            if w<=stock_w and h<=stock_h:
+            if w <= stock_w and h <= stock_h:
                 for x in range(stock_w - w + 1):
                     for y in range(stock_h - h + 1):
-                        if self._can_place_(stock,(x,y),(w,h)):
-                            return (x,y,(w,h))
-            if h<=stock_w and w<=stock_h:
+                        if self._can_place_(stock, (x, y), (w, h)):
+                            return (x, y, (w, h))
+            if h <= stock_w and w <= stock_h:
                 for x in range(stock_w - h + 1):
                     for y in range(stock_h - w + 1):
-                        if self._can_place_(stock,(x,y),(h,w)):
-                            return (x,y,(h,w))
+                        if self._can_place_(stock, (x, y), (h, w)):
+                            return (x, y, (h, w))
             return None
 
         def backtrack(prod_idx):
@@ -86,19 +88,21 @@ class brandandbound(Policy):
             for n in range(needed):
                 placed = False
                 for (original_idx, w_s, h_s) in stock_info:
-                    res = try_place_product(current_stocks[original_idx], p["size"][0], p["size"][1])
+                    res = try_place_product(
+                        current_stocks[original_idx], p["size"][0], p["size"][1])
                     if res is not None:
                         x, y, chosen_size = res
                         cw, ch = chosen_size
                         stock = current_stocks[original_idx]
-                        stock[x:x+cw,y:y+ch] = prod_idx
-                        solution.append({"stock_idx":original_idx,"size":[cw,ch],"position":(x,y)})
+                        stock[x:x+cw, y:y+ch] = prod_idx
+                        solution.append({"stock_idx": original_idx, "size": [
+                                        cw, ch], "position": (x, y)})
                         p["quantity"] -= 1
-                        if backtrack(prod_idx if p["quantity"]>0 else prod_idx+1):
+                        if backtrack(prod_idx if p["quantity"] > 0 else prod_idx+1):
                             placed = True
                             break
                         else:
-                            stock[x:x+cw,y:y+ch] = -1
+                            stock[x:x+cw, y:y+ch] = -1
                             solution.pop()
                             p["quantity"] += 1
                 if not placed:
@@ -122,9 +126,10 @@ class greedy(Policy):
         products = observation["products"]
         total_qty = sum(p["quantity"] for p in products)
         if total_qty == 0:
-            return {"stock_idx":0,"size":[1,1],"position":(0,0)}
+            return {"stock_idx": 0, "size": [1, 1], "position": (0, 0)}
 
-        current_products_key = tuple((p["size"][0], p["size"][1], p["quantity"]) for p in products)
+        current_products_key = tuple(
+            (p["size"][0], p["size"][1], p["quantity"]) for p in products)
         if current_products_key != getattr(self, 'last_products_info', None):
             self.last_products_info = current_products_key
             self.actions_queue = []
@@ -132,13 +137,14 @@ class greedy(Policy):
             self.run_greedy(observation)
 
         if not getattr(self, 'solved', False) or len(getattr(self, 'actions_queue', [])) == 0:
-            return {"stock_idx":0,"size":[1,1],"position":(0,0)}
+            return {"stock_idx": 0, "size": [1, 1], "position": (0, 0)}
 
         return self.actions_queue.pop(0)
 
     def run_greedy(self, observation):
         stocks = observation["stocks"]
-        products = [{"size":p["size"].copy(),"quantity":p["quantity"]} for p in observation["products"]]
+        products = [{"size": p["size"].copy(), "quantity": p["quantity"]}
+                    for p in observation["products"]]
         stock_info = []
         for i, s in enumerate(stocks):
             w, h = self._extract_usable_dimensions(s)
@@ -150,20 +156,20 @@ class greedy(Policy):
         def can_place(stock, position, prod_size):
             x, y = position
             w, h = prod_size
-            return np.all(stock[x:x+w,y:y+h] == -1)
+            return np.all(stock[x:x+w, y:y+h] == -1)
 
         def try_place_in_stock(stock, original_idx, w, h):
             stock_w, stock_h = self._extract_usable_dimensions(stock)
             if w <= stock_w and h <= stock_h:
                 for x in range(stock_w - w + 1):
                     for y in range(stock_h - h + 1):
-                        if can_place(stock,(x,y),(w,h)):
-                            return (original_idx,x,y,(w,h))
+                        if can_place(stock, (x, y), (w, h)):
+                            return (original_idx, x, y, (w, h))
             if h <= stock_w and w <= stock_h:
                 for x in range(stock_w - h + 1):
                     for y in range(stock_h - w + 1):
-                        if can_place(stock,(x,y),(h,w)):
-                            return (original_idx,x,y,(h,w))
+                        if can_place(stock, (x, y), (h, w)):
+                            return (original_idx, x, y, (h, w))
             return None
 
         def select_largest_product(products):
@@ -188,12 +194,14 @@ class greedy(Policy):
             psize = products[idx]["size"]
             placed = False
             for (original_idx, w_s, h_s) in stock_info:
-                res = try_place_in_stock(current_stocks[original_idx], original_idx, psize[0], psize[1])
+                res = try_place_in_stock(
+                    current_stocks[original_idx], original_idx, psize[0], psize[1])
                 if res is not None:
                     st_i, x, y, chosen_size = res
                     cw, ch = chosen_size
-                    current_stocks[st_i][x:x+cw,y:y+ch] = idx
-                    solution.append({"stock_idx":st_i,"size":[cw,ch],"position":(x,y)})
+                    current_stocks[st_i][x:x+cw, y:y+ch] = idx
+                    solution.append({"stock_idx": st_i, "size": [
+                                    cw, ch], "position": (x, y)})
                     products[idx]["quantity"] -= 1
                     placed = True
                     break
@@ -210,4 +218,4 @@ class greedy(Policy):
     def _can_place_(self, stock, position, prod_size):
         x, y = position
         w, h = prod_size
-        return np.all(stock[x:x+w,y:y+h] == -1)
+        return np.all(stock[x:x+w, y:y+h] == -1)

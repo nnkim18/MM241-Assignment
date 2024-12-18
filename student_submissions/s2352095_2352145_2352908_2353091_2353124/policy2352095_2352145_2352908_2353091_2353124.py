@@ -1,5 +1,6 @@
 from policy import Policy
-  
+
+
 class Policy2352095_2352145_2352908_2353091_2353124(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
@@ -7,24 +8,28 @@ class Policy2352095_2352145_2352908_2353091_2353124(Policy):
             self.policy_id = 1
         elif policy_id == 2:
             self.policy_id = 2
-        
+
     def get_action(self, observation, info):
         if self.policy_id == 1:
             return self._greedy_action(observation, info)
         elif self.policy_id == 2:
             return self._ffd_action(observation, info)
-    #Hoang Kim Cuong(2352145) implemented Greedy
+    # Hoang Kim Cuong(2352145) implemented Greedy
+
     def _greedy_action(self, observation, info):
-        list_prods = sorted(observation["products"], key=lambda p: (p["size"][0] * p["size"][1], p["quantity"]), reverse=True)
-        stocks_with_sizes = [(i, stock, *self._get_stock_size_(stock), 0) for i, stock in enumerate(observation["stocks"])]
-        stocks_with_sizes = sorted(stocks_with_sizes, key=lambda s: s[2] * s[3])  
+        list_prods = sorted(observation["products"], key=lambda p: (
+            p["size"][0] * p["size"][1], p["quantity"]), reverse=True)
+        stocks_with_sizes = [(i, stock, *self._get_stock_size_(stock), 0)
+                             for i, stock in enumerate(observation["stocks"])]
+        stocks_with_sizes = sorted(
+            stocks_with_sizes, key=lambda s: s[2] * s[3])
         for prod in list_prods:
             if prod["quantity"] > 0:
                 prod_size = prod["size"]
                 best_stock_idx = -1
                 best_position = None
                 best_size = prod_size
-                max_utilization = -1  
+                max_utilization = -1
                 min_wasted_space = float("inf")
                 for stock_idx, stock, stock_w, stock_h, utilization in stocks_with_sizes:
                     for orientation in [(prod_size, False), (prod_size[::-1], True)]:
@@ -37,7 +42,8 @@ class Policy2352095_2352145_2352908_2353091_2353124(Policy):
                                 if self._can_place_(stock, (x, y), size):
                                     used_space = prod_w * prod_h
                                     total_space = stock_w * stock_h
-                                    new_utilization = (utilization * total_space + used_space) / total_space
+                                    new_utilization = (
+                                        utilization * total_space + used_space) / total_space
                                     wasted_space = total_space - used_space
                                     if (new_utilization > max_utilization or (new_utilization == max_utilization and wasted_space < min_wasted_space)):
                                         max_utilization = new_utilization
@@ -50,14 +56,19 @@ class Policy2352095_2352145_2352908_2353091_2353124(Policy):
                 if best_position is not None:
                     for i, (idx, stock, w, h, util) in enumerate(stocks_with_sizes):
                         if idx == best_stock_idx:
-                            stocks_with_sizes[i] = (idx, stock, w, h, max_utilization)
+                            stocks_with_sizes[i] = (
+                                idx, stock, w, h, max_utilization)
                             break
                     return {"stock_idx": best_stock_idx, "size": best_size, "position": best_position}
-    #Hoang Kim Cuong(2352145) implemented FFD
+    # Hoang Kim Cuong(2352145) implemented FFD
+
     def _ffd_action(self, observation, info):
-        list_prods = sorted(observation["products"], key=lambda p: (p["size"][0] * p["size"][1]), reverse=True)
-        stocks_with_sizes = [(i, stock, *self._get_stock_size_(stock)) for i, stock in enumerate(observation["stocks"])]
-        stocks_with_sizes = sorted(stocks_with_sizes, key=lambda s: s[2] * s[3], reverse=True)
+        list_prods = sorted(observation["products"], key=lambda p: (
+            p["size"][0] * p["size"][1]), reverse=True)
+        stocks_with_sizes = [(i, stock, *self._get_stock_size_(stock))
+                             for i, stock in enumerate(observation["stocks"])]
+        stocks_with_sizes = sorted(
+            stocks_with_sizes, key=lambda s: s[2] * s[3], reverse=True)
         for prod in list_prods:
             if prod["quantity"] > 0:
                 prod_size = prod["size"]

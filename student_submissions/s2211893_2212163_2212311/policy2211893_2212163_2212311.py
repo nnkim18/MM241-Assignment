@@ -1,6 +1,7 @@
 from policy import Policy
 
-class Policy2210xxx(Policy):
+
+class Policy2211893_2212163_2212311(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
@@ -15,8 +16,9 @@ class Policy2210xxx(Policy):
 
     def algorithm_one_(self, observation, info):
         list_prods = list(observation["products"])
-        
-        list_prods.sort(key=lambda prod: prod["size"][0] * prod["size"][1], reverse=True)
+
+        list_prods.sort(
+            key=lambda prod: prod["size"][0] * prod["size"][1], reverse=True)
 
         for prod in list_prods:
             if prod["quantity"] > 0:
@@ -41,32 +43,29 @@ class Policy2210xxx(Policy):
         products = observation["products"]
         stocks = observation["stocks"]
 
-        
         sorted_products = sorted(
             products,
             key=lambda prod: prod["size"][0] * prod["size"][1], reverse=True
         )
 
         for prod in sorted_products:
-            if prod["quantity"] > 0:  
+            if prod["quantity"] > 0:
                 prod_size = prod["size"]
                 prod_w, prod_h = prod_size
                 for stock_idx, stock in enumerate(stocks):
                     stock_w, stock_h = self._get_stock_size_(stock)
-                   
+
                     if stock_w >= prod_w and stock_h >= prod_h:
-                        
+
                         for pos_x in range(stock_w - prod_w + 1):
                             for pos_y in range(stock_h - prod_h + 1):
-                                
+
                                 if self._can_place_(stock, (pos_x, pos_y), prod_size):
-                                    
+
                                     return {
                                         "stock_idx": stock_idx,
                                         "size": prod_size,
                                         "position": (pos_x, pos_y),
                                     }
 
-
         return None
-

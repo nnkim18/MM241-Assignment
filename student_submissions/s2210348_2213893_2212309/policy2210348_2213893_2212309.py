@@ -2,6 +2,7 @@ from policy import Policy
 import numpy as np
 import random
 
+
 class Policy2210348_2213893_2212309(Policy):
     def __init__(self, policy_id=1, stocks=None, products=None):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
@@ -30,14 +31,16 @@ class Policy2210348_2213893_2212309(Policy):
 
             if state not in self.policy_table:
                 # Initialize policy probabilities and value table for the state
-                self.policy_table[state] = np.ones(self.num_actions) / self.num_actions
+                self.policy_table[state] = np.ones(
+                    self.num_actions) / self.num_actions
                 self.value_table[state] = 0.0
 
             if random.uniform(0, 1) < 0.1:  # Exploration
                 action = self._random_action(observation)
             else:  # Exploitation
                 action_probs = self.policy_table[state]
-                action_idx = np.random.choice(len(action_probs), p=action_probs)
+                action_idx = np.random.choice(
+                    len(action_probs), p=action_probs)
                 action = self._decode_action(action_idx, observation)
             return action
         else:
@@ -65,20 +68,25 @@ class Policy2210348_2213893_2212309(Policy):
                             continue
 
                         # Try original orientation
-                        placement = self._find_best_position(stock, prod_size, stock_w, stock_h)
+                        placement = self._find_best_position(
+                            stock, prod_size, stock_w, stock_h)
                         if placement:
-                            score = self._calculate_remaining_space(stock, prod_size, stock_w, stock_h, placement)
+                            score = self._calculate_remaining_space(
+                                stock, prod_size, stock_w, stock_h, placement)
                             if score < best_score:
                                 best_score = score
-                                best_placement = {"stock_idx": i, "size": prod_size, "position": placement}
+                                best_placement = {
+                                    "stock_idx": i, "size": prod_size, "position": placement}
 
                         # Try rotated orientation
                         if prod_size[0] != prod_size[1]:  # If not square
                             rotated_size = prod_size[::-1]
                             if stock_w >= rotated_size[0] and stock_h >= rotated_size[1]:
-                                placement = self._find_best_position(stock, rotated_size, stock_w, stock_h)
+                                placement = self._find_best_position(
+                                    stock, rotated_size, stock_w, stock_h)
                                 if placement:
-                                    score = self._calculate_remaining_space(stock, rotated_size, stock_w, stock_h, placement)
+                                    score = self._calculate_remaining_space(
+                                        stock, rotated_size, stock_w, stock_h, placement)
                                     if score < best_score:
                                         best_score = score
                                         best_placement = {
@@ -135,7 +143,8 @@ class Policy2210348_2213893_2212309(Policy):
         """Decode the action index into the actual action."""
         stocks = observation["stocks"]
         stock_idx = action_idx // self.num_actions
-        position = (action_idx % self.num_actions, action_idx % self.num_actions)
+        position = (action_idx % self.num_actions,
+                    action_idx % self.num_actions)
         return {
             "stock_idx": stock_idx,
             "size": [1, 1],  # Simplified for demonstration
@@ -147,7 +156,8 @@ class Policy2210348_2213893_2212309(Policy):
         next_state = self._get_state_key(next_observation, info)
 
         # Store experience
-        self.store_experience(state, action, reward, next_state, info.get("done", False))
+        self.store_experience(state, action, reward,
+                              next_state, info.get("done", False))
 
         if len(self.replay_buffer) >= 32:  # Update after sufficient experiences
             self.update_policy()
@@ -171,29 +181,38 @@ class Policy2210348_2213893_2212309(Policy):
             for t in range(i, len(rewards)):
                 G += rewards[t] * (self.gamma ** (t - i))
                 if t + 1 < len(rewards):
-                    advantage += rewards[t] + self.gamma * self.value_table.get(next_states[t], 0) - self.value_table[states[t]]
+                    advantage += rewards[t] + self.gamma * self.value_table.get(
+                        next_states[t], 0) - self.value_table[states[t]]
             returns.append(G)
             advantages.append(advantage)
 
         # Normalize advantages if enabled
         if self.advantage_normalization:
-            advantages = (advantages - np.mean(advantages)) / (np.std(advantages) + 1e-8)
+            advantages = (advantages - np.mean(advantages)) / \
+                (np.std(advantages) + 1e-8)
 
         for state, action, advantage, G in zip(states, actions, advantages, returns):
             action_idx = self._get_action_index(action)
 
             # Update policy probabilities with entropy regularization
             old_prob = self.policy_table[state][action_idx]
-            entropy = -np.sum(self.policy_table[state] * np.log(self.policy_table[state] + 1e-8))
-            new_prob = old_prob * np.exp(self.actor_lr * advantage + self.entropy_coefficient * entropy)
-            self.policy_table[state] = np.clip(new_prob, old_prob - self.epsilon, old_prob + self.epsilon)
+            entropy = - \
+                np.sum(self.policy_table[state] *
+                       np.log(self.policy_table[state] + 1e-8))
+            new_prob = old_prob * \
+                np.exp(self.actor_lr * advantage +
+                       self.entropy_coefficient * entropy)
+            self.policy_table[state] = np.clip(
+                new_prob, old_prob - self.epsilon, old_prob + self.epsilon)
 
             # Normalize policy probabilities
             self.policy_table[state] /= np.sum(self.policy_table[state])
 
             # Update value function with added loss weighting
-            value_loss = self.value_coefficient * (G - self.value_table[state]) ** 2
-            self.value_table[state] += self.critic_lr * (G - self.value_table[state]) - value_loss
+            value_loss = self.value_coefficient * \
+                (G - self.value_table[state]) ** 2
+            self.value_table[state] += self.critic_lr * \
+                (G - self.value_table[state]) - value_loss
 
     def _get_action_index(self, action):
         stock_idx = action.get("stock_idx", -1)
@@ -216,5 +235,3 @@ class Policy2210348_2213893_2212309(Policy):
 
         total_reward = placement_reward + efficiency_reward + trim_penalty
         return max(-2000, min(total_reward, 500))
-
-

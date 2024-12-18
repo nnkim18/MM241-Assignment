@@ -1,7 +1,8 @@
 from policy import Policy
 import numpy as np
 
-class Policy2210xxx(Policy):
+
+class Policy2233164_2013563_2213869_2213009_2311928(Policy):
     def __init__(self, policy_id=1, stocks=None, products=None):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.policy_id = policy_id
@@ -14,7 +15,7 @@ class Policy2210xxx(Policy):
             # Use the Adaptive Fit Policy
             action = self.AdaptiveFitPolicy(observation, info)
         else:
-            
+
             # Use the Weighted Area Policy
             action = self.WeightedAreaPolicy(observation, info)
         return action
@@ -33,7 +34,8 @@ class Policy2210xxx(Policy):
                 "index": i,
                 "stock": stock,
                 "free_space": free_space,
-                "tight": free_space < (total_space * 0.3)  # Stock is "tight" if less than 30% free
+                # Stock is "tight" if less than 30% free
+                "tight": free_space < (total_space * 0.3)
             })
 
         # Sort stocks by free space
@@ -43,11 +45,13 @@ class Policy2210xxx(Policy):
         # Sort products by area
         sorted_prods_tight = sorted(
             list_prods,
-            key=lambda prod: prod["size"][0] * prod["size"][1] if prod["quantity"] > 0 else float("inf"),
+            key=lambda prod: prod["size"][0] *
+            prod["size"][1] if prod["quantity"] > 0 else float("inf"),
         )
         sorted_prods_spacious = sorted(
             list_prods,
-            key=lambda prod: -(prod["size"][0] * prod["size"][1]) if prod["quantity"] > 0 else float("-inf"),
+            key=lambda prod: -(prod["size"][0] * prod["size"]
+                               [1]) if prod["quantity"] > 0 else float("-inf"),
         )
 
         # Try placing smaller items in tight stocks
@@ -144,4 +148,3 @@ class Policy2210xxx(Policy):
 
         # No valid placement found
         return {"stock_idx": -1, "size": [0, 0], "position": (0, 0)}
-

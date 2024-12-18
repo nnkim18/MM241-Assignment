@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import linprog
 
 
-class Policy2210xxx(Policy):
+class Policy2313891_2313668_2313817_2313462_2313922(Policy):
     def __init__(self, policy_id=1):
         super().__init__()
         self.actions = []
@@ -22,16 +22,17 @@ class Policy2210xxx(Policy):
             if not self.actions:
                 self.ILP(observation)
             return self.actions.pop(0)
-        
+
         elif self.algorithym == 2:
-            return self.Best_fit(observation,info)
+            return self.Best_fit(observation, info)
 
     # Student code here
     def Best_fit(self, observation, info):
         products = observation["products"]
         stocks = observation["stocks"]
-        products = sorted(products, key=lambda prod: prod["size"][0] * prod["size"][1], reverse=True)
-        
+        products = sorted(
+            products, key=lambda prod: prod["size"][0] * prod["size"][1], reverse=True)
+
         for prod in products:
             if prod["quantity"] > 0:
                 prod_size = prod["size"]
@@ -44,27 +45,29 @@ class Policy2210xxx(Policy):
 
                 for stock_idx, stock in enumerate(stocks):
                     stock_w, stock_h = self._get_stock_size_(stock)
-                    
+
                     # Kiểm tra lần 1: sản phẩm theo chiều dài rộng gốc
                     if stock_w >= prod_w and stock_h >= prod_h:
                         for i in range(stock_w - prod_w + 1):
                             for j in range(stock_h - prod_h + 1):
                                 if self._can_place_(stock, (i, j), prod_size):
                                     # Tính không gian còn lại sau khi đặt sản phẩm
-                                    left_space = (stock_w * stock_h) - (prod_w * prod_h)
+                                    left_space = (
+                                        stock_w * stock_h) - (prod_w * prod_h)
                                     if left_space < best_fit_left_space:
                                         best_fit_left_space = left_space
                                         best_fit_stock = stock_idx
                                         best_fit_position = (i, j)
                                         best_fit_size = prod_size
                                     placed = True
-                    
+
                     # Kiểm tra lần 2: sản phẩm xoay 90 độ
                     if not placed and stock_w >= prod_h and stock_h >= prod_w:
                         for i in range(stock_w - prod_h + 1):
                             for j in range(stock_h - prod_w + 1):
                                 if self._can_place_(stock, (i, j), prod_size[::-1]):
-                                    left_space = (stock_w * stock_h) - (prod_h * prod_w)
+                                    left_space = (
+                                        stock_w * stock_h) - (prod_h * prod_w)
                                     if left_space < best_fit_left_space:
                                         best_fit_left_space = left_space
                                         best_fit_stock = stock_idx
@@ -80,15 +83,17 @@ class Policy2210xxx(Policy):
 
         return None
 
-    
     def ILP(self, observation):
-        list_prods = np.copy(observation["products"])  # List of products with size and profits
-        stocks = np.copy(observation["stocks"])        # List of available stock sheets
+        # List of products with size and profits
+        list_prods = np.copy(observation["products"])
+        # List of available stock sheets
+        stocks = np.copy(observation["stocks"])
 
-        list_prods = sorted(list_prods, key=lambda x: x["size"][0] * x["size"][1], reverse=True)
-        
+        list_prods = sorted(
+            list_prods, key=lambda x: x["size"][0] * x["size"][1], reverse=True)
+
         stock_dims = [self._get_stock_size_(stock) for stock in stocks]
-        
+
         # Number of products and stocks
         n_products = len(list_prods)
         n_stocks = len(stocks)
@@ -117,12 +122,14 @@ class Policy2210xxx(Policy):
             for i, prod in enumerate(list_prods):
                 prod_w, prod_h = prod["size"]
                 if self._can_place_(stocks[j], (0, 0), (prod_w, prod_h)) or self._can_place_(stocks[j], (0, 0), (prod_h, prod_w)):
-                    row[i * n_stocks + j] = max(prod_w * prod_h, prod_h * prod_w)
+                    row[i * n_stocks +
+                        j] = max(prod_w * prod_h, prod_h * prod_w)
             A_ub.append(row)
             b_ub.append(stock_w * stock_h)
 
         # Solve ILP using linprog
-        result = linprog(c, A_ub=np.array(A_ub), b_ub=np.array(b_ub), method='simplex')
+        result = linprog(c, A_ub=np.array(
+            A_ub), b_ub=np.array(b_ub), method='simplex')
 
         idx_stock = -1
         prev_allo = 0
@@ -144,7 +151,7 @@ class Policy2210xxx(Policy):
             while prod_q > 0:
                 placed = False
                 for x in range(stock_w):
-                    for y in range(stock_h):      
+                    for y in range(stock_h):
                         if self._can_place_(stock, (x, y), prod_size):
                             self.actions.append({
                                 "stock_idx": idx_stock,
@@ -170,10 +177,10 @@ class Policy2210xxx(Policy):
                 if not placed:
                     break
         return self.actions
-        
-    def get_action_1(self, observation,info):
+
+    def get_action_1(self, observation, info):
         if not self.actions:
             self.ILP(observation)
-            
+
         return self.actions.pop(0)
     # You can add more functions if needed

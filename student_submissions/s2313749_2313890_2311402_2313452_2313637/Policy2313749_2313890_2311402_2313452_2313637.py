@@ -2,52 +2,59 @@ from policy import Policy
 import numpy as np
 import random
 from copy import deepcopy
-class Policy2210xxx(Policy):
+
+
+class Policy2313749_2313890_2311402_2313452_2313637(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
         # Student code here
         if policy_id == 1:
-            self.id=1
-            self.dem=0
-            self.count=0
+            self.id = 1
+            self.dem = 0
+            self.count = 0
             self.best_solution = None
             self.products_list = None
             # Biến kiểm tra xem sản phẩm đã đủ chưa
             self.count_products = 0
             pass
         elif policy_id == 2:
-            self.id=2
-            self.dem=0
-            self.count=0
-            self.leng=0
+            self.id = 2
+            self.dem = 0
+            self.count = 0
+            self.leng = 0
             pass
+
     def get_action(self, observation, info):
         # Student code here
-        if (self.id==2):
-         if (self.dem==0):
-             self.list_prods = observation["products"]
-             self.list_prods=sorted(self.list_prods, key=lambda x: x['size'][0] * x['size'][1],reverse=True)
-             for i in self.list_prods:
-                 #(i)
-                 self.dem=self.dem+i['quantity']
-             ls=observation["stocks"]
-             self.list_stock=[]
-             for i,stock in enumerate(observation["stocks"]):
-                 self.list_stock.append({'index':i,'stock': stock,'trim': np.sum(stock == -1)})
-             self.list_stock=sorted(self.list_stock,key=lambda x: x['trim'])
-         self.dem=self.dem-1
-         return self.BestFit( observation, info)
-        if (self.id==1):
+        if (self.id == 2):
+            if (self.dem == 0):
+                self.list_prods = observation["products"]
+                self.list_prods = sorted(
+                    self.list_prods, key=lambda x: x['size'][0] * x['size'][1], reverse=True)
+                for i in self.list_prods:
+                    # (i)
+                    self.dem = self.dem+i['quantity']
+                ls = observation["stocks"]
+                self.list_stock = []
+                for i, stock in enumerate(observation["stocks"]):
+                    self.list_stock.append(
+                        {'index': i, 'stock': stock, 'trim': np.sum(stock == -1)})
+                self.list_stock = sorted(
+                    self.list_stock, key=lambda x: x['trim'])
+            self.dem = self.dem-1
+            return self.BestFit(observation, info)
+        if (self.id == 1):
             products = observation["products"]
             stocks = observation["stocks"]
             output_txt = None
-            if self.dem==0:
+            if self.dem == 0:
                 for i in products:
-                    self.count=self.count+i['quantity']
-                    #(i)
-                self.best_solution = self.GA_algorithm(products, stocks, population_size=10, num_generations=10)
-            for stock_idx, stock in enumerate(self.best_solution):    
+                    self.count = self.count+i['quantity']
+                    # (i)
+                self.best_solution = self.GA_algorithm(
+                    products, stocks, population_size=10, num_generations=10)
+            for stock_idx, stock in enumerate(self.best_solution):
                 stock_w, stock_h = self._get_stock_size_(stock)
 
                 # Duyệt qua từng ô trong stock
@@ -59,10 +66,10 @@ class Policy2210xxx(Policy):
                             for product in self.products_list:
                                 # if product["index"] == stock[i, j]:
                                 # Cải tiến cho rotate
-                                if product["index"] == stock[i, j] or product["index"] == stock[i, j] -1000:
+                                if product["index"] == stock[i, j] or product["index"] == stock[i, j] - 1000:
                                     size = product["size"]
                                     # Cải tiến cho rotate
-                                    if product["index"] == stock[i, j] -1000:
+                                    if product["index"] == stock[i, j] - 1000:
                                         size = size[::-1]
                                     w, h = size
                                     # Xóa sản phẩm khỏi best_solution
@@ -73,75 +80,79 @@ class Policy2210xxx(Policy):
                                  # Xóa sản phẩm khỏi products_list
                                     self.products_list.remove(product)
                                     # Trả về action
-                                    #(products) # In thử
-                                    self.dem=self.dem+1
-                                    if (self.dem==self.count):
-                                        self.dem=0
-                                        self.count=0
-                                    #(size)
+                                    # (products) # In thử
+                                    self.dem = self.dem+1
+                                    if (self.dem == self.count):
+                                        self.dem = 0
+                                        self.count = 0
+                                    # (size)
                                     return {"stock_idx": stock_idx, "size": size, "position": (i, j)}
-            #(len(self.products_list))
-            #(self.count_products)
+            # (len(self.products_list))
+            # (self.count_products)
             return None
-    def BestFit(self, observation, info):
-         for prod in self.list_prods:
-             quantity=prod['quantity']
-             if (quantity>0):
-                 for stock in self.list_stock:
-                     stock_w, stock_h = self._get_stock_size_(stock['stock'])
-                     prod_size = prod["size"]
-                     prod_w, prod_h = prod['size']
 
-                     prod_hr, prod_wr=prod['size']
-                     prod_size_r=np.array([prod_wr,prod_hr])
-                     if prod_w*prod_h>stock['trim']:
-                         continue
-                     if stock_w < prod_w or stock_h < prod_h:
-                         if stock_w<prod_wr or stock_h<prod_hr:#Xoay
-                             continue
-                         else:
-                             pass
-                     pos_x, pos_y = None, None
-                     for x in range(stock_w - min(prod_w,prod_wr) + 1):
-                         for y in range(stock_h - min(prod_h,prod_hr) + 1):
-                             if (self._can_place_(stock['stock'], (x, y), prod_size)) and(x+prod_w<=stock_w and y+prod_h<=stock_h):
-                                 pos_x, pos_y = x, y
-                                 break
-                             if self._can_place_(stock['stock'], (x, y), prod_size_r) and((x+prod_wr<=stock_w and y+prod_hr<=stock_h)):
-                                 pos_x, pos_y = x, y
-                                 prod_size=prod_size_r
-                                 break
-                         if pos_x is not None and pos_y is not None:
-                             break
-                     if pos_x is not None and pos_y is not None:
-                         stock_idx = stock['index']
-                         stock['trim']=stock['trim']-prod_w*prod_h
-                         for i in range(stock_idx,1,-1):
-                             if (self.list_stock[i]['trim']<self.list_stock[i-1]['trim']):
-                                 tg=self.list_stock[i]['trim']
-                                 self.list_stock[i]['trim']=self.list_stock[i-1]['trim']
-                                 self.list_stock[i-1]['trim']=tg
-                             else:
-                                 break
-                         #self.list_stock=sorted(self.list_stock,key=lambda x: x['trim'])
-                         break
-                 if pos_x is not None and pos_y is not None:
-                     break
-         return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
+    def BestFit(self, observation, info):
+        for prod in self.list_prods:
+            quantity = prod['quantity']
+            if (quantity > 0):
+                for stock in self.list_stock:
+                    stock_w, stock_h = self._get_stock_size_(stock['stock'])
+                    prod_size = prod["size"]
+                    prod_w, prod_h = prod['size']
+
+                    prod_hr, prod_wr = prod['size']
+                    prod_size_r = np.array([prod_wr, prod_hr])
+                    if prod_w*prod_h > stock['trim']:
+                        continue
+                    if stock_w < prod_w or stock_h < prod_h:
+                        if stock_w < prod_wr or stock_h < prod_hr:  # Xoay
+                            continue
+                        else:
+                            pass
+                    pos_x, pos_y = None, None
+                    for x in range(stock_w - min(prod_w, prod_wr) + 1):
+                        for y in range(stock_h - min(prod_h, prod_hr) + 1):
+                            if (self._can_place_(stock['stock'], (x, y), prod_size)) and (x+prod_w <= stock_w and y+prod_h <= stock_h):
+                                pos_x, pos_y = x, y
+                                break
+                            if self._can_place_(stock['stock'], (x, y), prod_size_r) and ((x+prod_wr <= stock_w and y+prod_hr <= stock_h)):
+                                pos_x, pos_y = x, y
+                                prod_size = prod_size_r
+                                break
+                        if pos_x is not None and pos_y is not None:
+                            break
+                    if pos_x is not None and pos_y is not None:
+                        stock_idx = stock['index']
+                        stock['trim'] = stock['trim']-prod_w*prod_h
+                        for i in range(stock_idx, 1, -1):
+                            if (self.list_stock[i]['trim'] < self.list_stock[i-1]['trim']):
+                                tg = self.list_stock[i]['trim']
+                                self.list_stock[i]['trim'] = self.list_stock[i-1]['trim']
+                                self.list_stock[i-1]['trim'] = tg
+                            else:
+                                break
+                        # self.list_stock=sorted(self.list_stock,key=lambda x: x['trim'])
+                        break
+                if pos_x is not None and pos_y is not None:
+                    break
+        return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
+
     def initialize_population(self, products, stocks, population_size=10):
         # Lấy danh sách các sản phẩm cần cắt
         products_list = []
         for idx, product in enumerate(products):
-            size = product["size"]                                              # np.array([w, h])
+            # np.array([w, h])
+            size = product["size"]
             quantity = product["quantity"]
-            products_list.extend([{"index": idx, "size": size}] * quantity)     # [{index: idx, size: size}, ...]
+            # [{index: idx, size: size}, ...]
+            products_list.extend([{"index": idx, "size": size}] * quantity)
         # Dùng deepcopy để không ảnh hưởng đến products_list gốc
         self.products_list = deepcopy(products_list)
 
         # Khởi tạo quần thể
         population = []
         for seed in range(population_size):
-            #Tạo lời giải ngẫu nhiên (danh sách các stock)
+            # Tạo lời giải ngẫu nhiên (danh sách các stock)
             solution = []
             for stock in stocks:
                 # Khởi tạo solution có kích thước 100x100
@@ -206,7 +217,8 @@ class Policy2210xxx(Policy):
                             for i in range(stock_w - prod_w + 1):
                                 for j in range(stock_h - prod_h + 1):
                                     if self._can_place_(stock, (i, j), size):
-                                        stock[i : i + prod_w, j : j + prod_h] = index
+                                        stock[i: i + prod_w,
+                                              j: j + prod_h] = index
                                         placed = True
                                         self.count_products += 1
                                         break
@@ -221,7 +233,8 @@ class Policy2210xxx(Policy):
                                     for j in range(stock_h - prod_hr + 1):
                                         if self._can_place_(stock, (i, j), prod_size_r):
                                             # Index của sản phẩm bị rotate sẽ là index + độ dài danh sách sản phẩm
-                                            stock[i : i + prod_wr, j : j + prod_hr] = index + 1000
+                                            stock[i: i + prod_wr, j: j +
+                                                  prod_hr] = index + 1000
                                             self.count_products += 1
                                             placed = True
                                             break
@@ -236,7 +249,8 @@ class Policy2210xxx(Policy):
                                 for j in range(stock_h - prod_hr + 1):
                                     if self._can_place_(stock, (i, j), prod_size_r):
                                         # Index của sản phẩm bị rotate sẽ là index + độ dài danh sách sản phẩm
-                                        stock[i : i + prod_wr, j : j + prod_hr] = index + 1000
+                                        stock[i: i + prod_wr, j: j +
+                                              prod_hr] = index + 1000
                                         self.count_products += 1
                                         placed = True
                                         break
@@ -250,7 +264,8 @@ class Policy2210xxx(Policy):
                                 for i in range(stock_w - prod_w + 1):
                                     for j in range(stock_h - prod_h + 1):
                                         if self._can_place_(stock, (i, j), size):
-                                            stock[i : i + prod_w, j : j + prod_h] = index
+                                            stock[i: i + prod_w,
+                                                  j: j + prod_h] = index
                                             self.count_products += 1
                                             placed = True
                                             break
@@ -258,7 +273,6 @@ class Policy2210xxx(Policy):
                                         break
                                 if placed:
                                     break
-
 
             population.append(solution)
         return population
@@ -278,8 +292,10 @@ class Policy2210xxx(Policy):
 
     def selection(self, fitness, population):
         # Sử dụng phương pháp Elitism để chọn 2 cá thể tốt nhất (vì đây là bài toán minimization nên cho fitness càng thấp thì cá thể càng tốt)
-        best_individuals = sorted(zip(fitness, population), key=lambda x: x[0])[:2]
-        selected_population = [individual for fitness, individual in best_individuals]
+        best_individuals = sorted(
+            zip(fitness, population), key=lambda x: x[0])[:2]
+        selected_population = [individual for fitness,
+                               individual in best_individuals]
         return selected_population
 
     def repair_solution(self, solution, products):
@@ -289,17 +305,22 @@ class Policy2210xxx(Policy):
             size = product["size"]
             quantity = product["quantity"]
             products_list.extend([{"index": idx, "size": size}] * quantity)
-        
+
         # Kiểm tra trong solution, nếu sản phẩm nằm trong solution thì xóa nó khỏi danh sách, còn không thì xóa nó khỏi solution
         for stock in solution:
-            used_area = np.zeros_like(stock, dtype=bool)    # False # Mảng đánh dấu các ô đã được sử dụng => Dùng để lọc các ô chứa sản phẩm trong stock của solution
-            unwanted_products = False                               # Biến đánh dấu sản phẩm dư thừa => Dùng để xóa sản phẩm dư thừa khỏi solution
+            # False # Mảng đánh dấu các ô đã được sử dụng => Dùng để lọc các ô chứa sản phẩm trong stock của solution
+            used_area = np.zeros_like(stock, dtype=bool)
+            # Biến đánh dấu sản phẩm dư thừa => Dùng để xóa sản phẩm dư thừa khỏi solution
+            unwanted_products = False
 
-            stock_w, stock_h = self._get_stock_size_(stock)         # Lấy kích thước của stock
+            stock_w, stock_h = self._get_stock_size_(
+                stock)         # Lấy kích thước của stock
             for i in range(stock_w):
                 for j in range(stock_h):
-                    if stock[i, j] >= 0 and not used_area[i, j]:    # Nếu ô đó chứa sản phẩm và chưa được xét
-                        product_idx = stock[i, j]                   # Lấy index của sản phẩm
+                    # Nếu ô đó chứa sản phẩm và chưa được xét
+                    if stock[i, j] >= 0 and not used_area[i, j]:
+                        # Lấy index của sản phẩm
+                        product_idx = stock[i, j]
                         # Tìm sản phẩm trong danh sách sản phẩm cần cắt
                         for product in products_list:
                             # if product["index"] == product_idx :
@@ -314,17 +335,21 @@ class Policy2210xxx(Policy):
                                 for x in range(i, i + product_w):
                                     for y in range(j, j + product_h):
                                         if x < stock_w and y < stock_h:
-                                            used_area[x, y] = True      # Đánh dấu ô đã được sử dụng
+                                            # Đánh dấu ô đã được sử dụng
+                                            used_area[x, y] = True
                                 unwanted_products = False
-                                products_list.remove(product)       # Xóa sản phẩm khỏi danh sách
+                                # Xóa sản phẩm khỏi danh sách
+                                products_list.remove(product)
                                 break
     # ----------------------------- Cần kiểm tra logic thêm -----------------------------
                             else:
                                 unwanted_products = True
                         if unwanted_products:
-                            stock[i, j] = -1                # Xóa sản phẩm khỏi solution
-                            used_area[i, j] = True          # Đánh dấu ô đã được sử dụng
-                            
+                            # Xóa sản phẩm khỏi solution
+                            stock[i, j] = -1
+                            # Đánh dấu ô đã được sử dụng
+                            used_area[i, j] = True
+
         # Đặt các sản phẩm còn lại vào solution (bước này có thể xem là mutation)
         random.shuffle(products_list)
         for product in products_list:
@@ -339,7 +364,8 @@ class Policy2210xxx(Policy):
                 if np.sum(stock >= 0) == 0:
                     continue
 
-                stock_w, stock_h = self._get_stock_size_(stock)    # Lấy kích thước của stock
+                stock_w, stock_h = self._get_stock_size_(
+                    stock)    # Lấy kích thước của stock
 
                 # if stock_w < product_w or stock_h < product_h:
                 #     continue
@@ -369,7 +395,8 @@ class Policy2210xxx(Policy):
                         for i in range(stock_w - product_w + 1):
                             for j in range(stock_h - product_h + 1):
                                 if self._can_place_(stock, (i, j), size):
-                                    stock[i : i + product_w, j : j + product_h] = index
+                                    stock[i: i + product_w,
+                                          j: j + product_h] = index
                                     placed = True
                                     break
                             if placed:
@@ -383,7 +410,8 @@ class Policy2210xxx(Policy):
                                 for j in range(stock_h - product_w + 1):
                                     if self._can_place_(stock, (i, j), (product_h, product_w)):
                                         # Index của sản phẩm bị rotate sẽ là index + độ dài danh sách sản phẩm
-                                        stock[i : i + product_h, j : j + product_w] = index + 1000
+                                        stock[i: i + product_h, j: j +
+                                              product_w] = index + 1000
                                         placed = True
                                         break
                                 if placed:
@@ -396,7 +424,8 @@ class Policy2210xxx(Policy):
                             for j in range(stock_h - product_w + 1):
                                 if self._can_place_(stock, (i, j), (product_h, product_w)):
                                     # Index của sản phẩm bị rotate sẽ là index + độ dài danh sách sản phẩm
-                                    stock[i : i + product_h, j : j + product_w] = index + 1000
+                                    stock[i: i + product_h, j: j +
+                                          product_w] = index + 1000
                                     placed = True
                                     break
                             if placed:
@@ -409,7 +438,8 @@ class Policy2210xxx(Policy):
                             for i in range(stock_w - product_w + 1):
                                 for j in range(stock_h - product_h + 1):
                                     if self._can_place_(stock, (i, j), size):
-                                        stock[i : i + product_w, j : j + product_h] = index
+                                        stock[i: i + product_w,
+                                              j: j + product_h] = index
                                         placed = True
                                         break
                                 if placed:
@@ -453,7 +483,8 @@ class Policy2210xxx(Policy):
                             for i in range(stock_w - product_w + 1):
                                 for j in range(stock_h - product_h + 1):
                                     if self._can_place_(stock, (i, j), size):
-                                        stock[i : i + product_w, j : j + product_h] = index
+                                        stock[i: i + product_w,
+                                              j: j + product_h] = index
                                         placed = True
                                         break
                                 if placed:
@@ -467,7 +498,8 @@ class Policy2210xxx(Policy):
                                     for j in range(stock_h - product_w + 1):
                                         if self._can_place_(stock, (i, j), (product_h, product_w)):
                                             # Index của sản phẩm bị rotate sẽ là index + độ dài danh sách sản phẩm
-                                            stock[i : i + product_h, j : j + product_w] = index + 1000
+                                            stock[i: i + product_h, j: j +
+                                                  product_w] = index + 1000
                                             placed = True
                                             break
                                     if placed:
@@ -482,7 +514,8 @@ class Policy2210xxx(Policy):
                                 for j in range(stock_h - product_w + 1):
                                     if self._can_place_(stock, (i, j), (product_h, product_w)):
                                         # Index của sản phẩm bị rotate sẽ là index + độ dài danh sách sản phẩm
-                                        stock[i : i + product_h, j : j + product_w] = index + 1000
+                                        stock[i: i + product_h, j: j +
+                                              product_w] = index + 1000
                                         placed = True
                                         break
                                 if placed:
@@ -495,7 +528,8 @@ class Policy2210xxx(Policy):
                                 for i in range(stock_w - product_w + 1):
                                     for j in range(stock_h - product_h + 1):
                                         if self._can_place_(stock, (i, j), size):
-                                            stock[i : i + product_w, j : j + product_h] = index
+                                            stock[i: i + product_w,
+                                                  j: j + product_h] = index
                                             placed = True
                                             break
                                     if placed:
@@ -550,37 +584,43 @@ class Policy2210xxx(Policy):
     def get_best_solution(self, population, fitness):
         best_individual = population[np.argmin(fitness)]
         return best_individual
-    
+
     def GA_algorithm(self, products, stocks, population_size=10, num_generations=100000):
         # Khởi tạo quần thể
-        population = self.initialize_population(products, stocks, population_size)
+        population = self.initialize_population(
+            products, stocks, population_size)
 
         # Đánh giá fitness cho từng cá thể trong quần thể
-        fitness = [self.fitness_function(individual) for individual in population]
+        fitness = [self.fitness_function(individual)
+                   for individual in population]
 
         # Chọn ra cá thể tốt nhất để test
         best_individual = self.get_best_solution(population, fitness)
 
         for _ in range(num_generations):
             # Đánh giá fitness cho từng cá thể trong quần thể
-            fitness = [self.fitness_function(individual) for individual in population]
+            fitness = [self.fitness_function(individual)
+                       for individual in population]
 
             # Chọn lọc
             selected_population = self.selection(fitness, population)
 
             # Lai ghép và đột biến tạo ra quần thể mới có số cá thể bằng số cá thể quần thể cũ
-            new_population = self.crossover_population(selected_population, products, len(population))
+            new_population = self.crossover_population(
+                selected_population, products, len(population))
 
             # Tính độ fitness của từng cá thể trong new_population
-            new_fitness = [self.fitness_function(individual) for individual in new_population]
+            new_fitness = [self.fitness_function(
+                individual) for individual in new_population]
 
             # Chọn ra cá thể tốt nhất trong new_population
-            best_individual = self.get_best_solution(new_population, new_fitness)
+            best_individual = self.get_best_solution(
+                new_population, new_fitness)
 
             # Cập nhật quần thể
             population = new_population
 
         return best_individual
-            
+
     # Student code here
     # You can add more functions if needed
