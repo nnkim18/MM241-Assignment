@@ -1,8 +1,8 @@
 from policy import Policy
-from student_submissions import QLearningPolicy, BestFit
+from . import QLearningPolicy, BestFit
 
         
-class Policy2210xxx(Policy):
+class Policy2033766_2033528(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         if policy_id == 1:
