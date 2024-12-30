@@ -35,11 +35,14 @@ def run_one_episode(config, policy):
 
     terminated = False
     truncated = False
-    info = None
+    info = {"filled_ratio": 1.0, "trim_loss": 1.0}
 
-    while not terminated and not truncated:
-        action = policy.get_action(observation, info)
-        observation, reward, terminated, truncated, info = env.step(action)
+    try:
+        while not terminated and not truncated:
+            action = policy.get_action(observation, info)
+            observation, reward, terminated, truncated, info = env.step(action)
+    except Exception as e:
+        print(f"Error: {e}")
 
     return info
 
@@ -91,7 +94,8 @@ def grade_all_groups(args):
 
     with ProcessPoolExecutor(max_workers=args.num_workers) as executor:
         results = list(
-            tqdm(executor.map(grade_one_group, group_folders), total=len(group_folders))
+            tqdm(executor.map(grade_one_group, group_folders),
+                 total=len(group_folders))
         )
 
     if len(results) == len(group_folders):
