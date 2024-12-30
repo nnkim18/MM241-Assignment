@@ -54,27 +54,28 @@ def grade_one_group(grroup_folder):
     )
     policy_class = import_submodule(module_name)
 
-    policy = policy_class()
+    for pid in [1, 2]:
+        policy = policy_class(policy_id=pid)
 
-    results = []
-    for config in CONFIGS:
-        executor = ThreadPoolExecutor(max_workers=1)
-        # Pass the arguments to the function via `submit`
-        future = executor.submit(run_one_episode, config, policy)
+        results = []
+        for config in CONFIGS:
+            executor = ThreadPoolExecutor(max_workers=1)
+            # Pass the arguments to the function via `submit`
+            future = executor.submit(run_one_episode, config, policy)
 
-        try:
-            result = future.result(timeout=300)  # Timeout after 5 seconds
-        except TimeoutError:
-            print("Function execution exceeded the time limit!")
-            result = {"filled_ratio": 1.0, "trim_loss": 1.0}
+            try:
+                result = future.result(timeout=300)  # Timeout after 5 seconds
+            except TimeoutError:
+                print("Function execution exceeded the time limit!")
+                result = {"filled_ratio": 1.0, "trim_loss": 1.0}
 
-        results.append(result)
+            results.append(result)
 
-    # Save the results
-    with open(f"student_submissions/{grroup_folder}/grade.json", "w") as f:
-        json.dump(results, f, indent=4)
+        # Save the results
+        with open(f"student_submissions/{grroup_folder}/grade_p{pid}.json", "w") as f:
+            json.dump(results, f, indent=4)
 
-    return results
+    return True
 
 
 def grade_all_groups(args):
@@ -98,7 +99,7 @@ def grade_all_groups(args):
                  total=len(group_folders))
         )
 
-    if len(results) == len(group_folders):
+    if sum(results) == len(group_folders):
         print("Grading completed successfully!")
 
 
