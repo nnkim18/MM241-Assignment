@@ -1,0 +1,42 @@
+[
+    {
+        "filled_ratio": 0.4,
+        "trim_loss": 0.5615079365079365
+    },
+    {
+        "filled_ratio": 0.2,
+        "trim_loss": 0.5516544117647059
+    },
+    {
+        "filled_ratio": 0.03,
+        "trim_loss": 0.26847795979740424
+    },
+    {
+        "filled_ratio": 0.17,
+        "trim_loss": 0.2750864524805709
+    },
+    {
+        "filled_ratio": 0.14,
+        "trim_loss": 0.24440546463770654
+    },
+    {
+        "filled_ratio": 1.0,
+        "trim_loss": 1.0
+    },
+    {
+        "filled_ratio": 1.0,
+        "trim_loss": 1.0
+    },
+    {
+        "filled_ratio": 1.0,
+        "trim_loss": 1.0
+    },
+    {
+        "filled_ratio": 1.0,
+        "trim_loss": 1.0
+    },
+    {
+        "filled_ratio": 1.0,
+        "trim_loss": 1.0
+    }
+]
