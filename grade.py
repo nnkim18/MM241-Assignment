@@ -55,8 +55,10 @@ def grade_one_group(grroup_folder):
     policy_class = import_submodule(module_name)
 
     for pid in [1, 2]:
-        policy = policy_class(policy_id=pid)
+        if os.path.exists(f"student_submissions/{grroup_folder}/grade_p{pid}.json"):
+            continue
 
+        policy = policy_class(policy_id=pid)
         results = []
         for config in CONFIGS:
             executor = ThreadPoolExecutor(max_workers=1)
@@ -64,7 +66,8 @@ def grade_one_group(grroup_folder):
             future = executor.submit(run_one_episode, config, policy)
 
             try:
-                result = future.result(timeout=300)  # Timeout after 5 seconds
+                # Timeout after 300 seconds
+                result = future.result(timeout=300)
             except TimeoutError:
                 print("Function execution exceeded the time limit!")
                 result = {"filled_ratio": 1.0, "trim_loss": 1.0}
