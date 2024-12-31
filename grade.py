@@ -58,9 +58,19 @@ def grade_one_group(grroup_folder):
         if os.path.exists(f"student_submissions/{grroup_folder}/grade_p{pid}.json"):
             continue
 
-        policy = policy_class(policy_id=pid)
+        try:
+            policy = policy_class(policy_id=pid)
+            policy_has_bug = False
+        except Exception as e:
+            print(f"Error: {e}")
+            policy_has_bug = True
+
         results = []
         for config in CONFIGS:
+            if policy_has_bug:
+                results.append({"filled_ratio": 1.0, "trim_loss": 1.0})
+                continue
+
             executor = ThreadPoolExecutor(max_workers=1)
             # Pass the arguments to the function via `submit`
             future = executor.submit(run_one_episode, config, policy)
@@ -98,8 +108,7 @@ def grade_all_groups(args):
 
     with ProcessPoolExecutor(max_workers=args.num_workers) as executor:
         results = list(
-            tqdm(executor.map(grade_one_group, group_folders),
-                 total=len(group_folders))
+            tqdm(executor.map(grade_one_group, group_folders), total=len(group_folders))
         )
 
     if sum(results) == len(group_folders):
