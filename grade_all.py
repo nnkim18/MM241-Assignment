@@ -47,15 +47,18 @@ def run_one_episode(config, policy):
     return info
 
 
-def grade_one_group(grroup_folder):
-    module_name = "policy" + grroup_folder[1:]
+def grade_one_group(group_folder, force=False):
+    module_name = "policy" + group_folder[1:]
     module_name = (
-        f"student_submissions.{grroup_folder}.{module_name}.Policy{grroup_folder[1:]}"
+        f"student_submissions.{group_folder}.{module_name}.Policy{group_folder[1:]}"
     )
     policy_class = import_submodule(module_name)
 
     for pid in [1, 2]:
-        if os.path.exists(f"student_submissions/{grroup_folder}/grade_p{pid}.json"):
+        if not force and os.path.exists(
+            f"student_submissions/{group_folder}/grade_p{pid}.json"
+        ):
+            print(f"{group_folder} is already graded!")
             continue
 
         try:
@@ -85,7 +88,7 @@ def grade_one_group(grroup_folder):
             results.append(result)
 
         # Save the results
-        with open(f"student_submissions/{grroup_folder}/grade_p{pid}.json", "w") as f:
+        with open(f"student_submissions/{group_folder}/grade_p{pid}.json", "w") as f:
             json.dump(results, f, indent=4)
 
     return True
