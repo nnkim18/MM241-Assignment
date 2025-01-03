@@ -26,9 +26,10 @@ class Policy:
         pos_x, pos_y = position
         prod_w, prod_h = prod_size
 
-        return np.all(stock[pos_x : pos_x + prod_w, pos_y : pos_y + prod_h] == -1)
+        return np.all(stock[pos_x: pos_x + prod_w, pos_y: pos_y + prod_h] == -1)
 
-class Policy2311650_2311538_2311486(Policy):
+
+class Policy2311650_2311486_2311538(Policy):
     def __init__(self, policy_id):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
 
@@ -46,6 +47,7 @@ class Policy2311650_2311538_2311486(Policy):
 
 ########################################################
 
+
 class BestFit(Policy):
     ###########################
     ##### Best Fit Policy #####
@@ -53,7 +55,7 @@ class BestFit(Policy):
         # Student code here
         self.total_wasted_area = 0
         self.total_area_of_all_stocks = 0
-        self.total_stock_used = 0    
+        self.total_stock_used = 0
         self.total_products_cut = 0
         self.computation_time = 0
 
@@ -119,7 +121,7 @@ class BestFit(Policy):
             "size": best_prod_size,
             "position": best_position,
         }
-        
+
     # def get_metrics(self):
     #     # Tính toán Waste Ratio
     #     waste_ratio = self.total_wasted_area / self.total_area_of_all_stocks if self.total_area_of_all_stocks != 0 else 0
@@ -130,7 +132,8 @@ class BestFit(Policy):
     #         "Number of Products Cut": self.total_products_cut,
     #         "Computation Time (s)": self.computation_time,
     #     }
-    
+
+
 class ColumnGenerationPolicy(Policy):
     def __init__(self):
         self.stock_width = 10
@@ -152,8 +155,10 @@ class ColumnGenerationPolicy(Policy):
         return move
 
     def _DATAPREPARE_(self, products):
-        self.required_quantities = np.array([product["quantity"] for product in products])
-        self.product_dimensions = np.array([product["size"] for product in products])
+        self.required_quantities = np.array(
+            [product["quantity"] for product in products])
+        self.product_dimensions = np.array(
+            [product["size"] for product in products])
 
         # Initialize with basic cutting patterns
         num_products = len(self.product_dimensions)
@@ -166,12 +171,15 @@ class ColumnGenerationPolicy(Policy):
 
         while is_new_pattern_found:
             if new_cut_pattern is not None:
-                current_patterns = np.column_stack((current_patterns, new_cut_pattern))
+                current_patterns = np.column_stack(
+                    (current_patterns, new_cut_pattern))
 
             dual_values = self._lp_relaxation_solution(current_patterns)
-            is_new_pattern_found, new_cut_pattern = self._find_other_pattern_(dual_values, stockpile)
+            is_new_pattern_found, new_cut_pattern = self._find_other_pattern_(
+                dual_values, stockpile)
 
-        optimal_stock_count, pattern_allocations = self._master_solution_(current_patterns)
+        optimal_stock_count, pattern_allocations = self._master_solution_(
+            current_patterns)
         return {
             "cut_patterns": current_patterns,
             "minimal_stock": optimal_stock_count,
@@ -198,7 +206,8 @@ class ColumnGenerationPolicy(Policy):
         constraint_bounds = -self.required_quantities
         variable_bounds = [(0, None) for _ in range(num_patterns)]
 
-        result = self._solve_linear_problem(objective_coeffs, constraint_matrix, constraint_bounds, variable_bounds)
+        result = self._solve_linear_problem(
+            objective_coeffs, constraint_matrix, constraint_bounds, variable_bounds)
         return result.slack
 
     def _master_solution_(self, cut_patterns):
@@ -209,7 +218,8 @@ class ColumnGenerationPolicy(Policy):
         constraint_bounds = -self.required_quantities
         variable_bounds = [(0, None) for _ in range(num_patterns)]
 
-        result = self._solve_linear_problem(objective_coeffs, constraint_matrix, constraint_bounds, variable_bounds)
+        result = self._solve_linear_problem(
+            objective_coeffs, constraint_matrix, constraint_bounds, variable_bounds)
 
         # Convert LP solution to integer solution
         allocation_variables = np.round(result.x).astype(int)
@@ -217,7 +227,8 @@ class ColumnGenerationPolicy(Policy):
         return optimal_stock_count, allocation_variables
 
     def _solve_pattern_finding_problem(self, obj_coeffs, constraint_matrix, constraint_bounds, var_bounds):
-        res = linprog(obj_coeffs, A_ub=constraint_matrix, b_ub=constraint_bounds, bounds=var_bounds, method="highs")
+        res = linprog(obj_coeffs, A_ub=constraint_matrix,
+                      b_ub=constraint_bounds, bounds=var_bounds, method="highs")
         if not res.success:
             raise ValueError("Pattern finding problem could not be solved.")
         return res
@@ -230,10 +241,12 @@ class ColumnGenerationPolicy(Policy):
             self.product_dimensions[:, 0],  # Widths of items
             self.product_dimensions[:, 1]   # Heights of items
         ]
-        constraint_bounds = [self.stock_width, self.stock_height]  # Stock dimensions
+        constraint_bounds = [self.stock_width,
+                             self.stock_height]  # Stock dimensions
         var_bounds = [(0, None) for _ in range(num_items)]
 
-        result = self._solve_pattern_finding_problem(obj_coeffs, constraint_matrix, constraint_bounds, var_bounds)
+        result = self._solve_pattern_finding_problem(
+            obj_coeffs, constraint_matrix, constraint_bounds, var_bounds)
 
         cutting_pattern = np.round(result.x).astype(int)
         reduced_cost = 1 - dual_values @ cutting_pattern
@@ -283,7 +296,8 @@ class ColumnGenerationPolicy(Policy):
                     for prod_idx, prod_count in enumerate(pattern):
                         if prod_count > 0:
                             product_size = self.product_dimensions[prod_idx]
-                            can_place, position = self._find_placement_in_stock(stock, stock_size, product_size)
+                            can_place, position = self._find_placement_in_stock(
+                                stock, stock_size, product_size)
                             if can_place:
                                 return {"stock_idx": stock_idx, "size": product_size, "position": position}
 

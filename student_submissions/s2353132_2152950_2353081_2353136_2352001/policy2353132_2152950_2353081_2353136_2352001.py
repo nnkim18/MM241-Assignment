@@ -1,6 +1,7 @@
 from policy import Policy
 import numpy as np
 
+
 class Policy2353132_2152950_2353081_2353136_2352001(Policy):
     def __init__(self, policy_id=1):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
@@ -8,12 +9,11 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
         # Student code here
         if policy_id == 1:
             self.Art = True
-            self.ColGenerate= False
+            self.ColGenerate = False
         elif policy_id == 2:
             self.ColGenerate = True
             self.Art = False
-            self.new_game = True        
-        
+            self.new_game = True
 
     def get_action(self, observation, info):
         # Student code here
@@ -21,14 +21,14 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
             return self.ArtAlgo(observation, info)
         elif self.ColGenerate:
             return self.execute_cutting_action(observation, info)
-        
 
     def ArtAlgo(self, observation, info):
         products = observation["products"]
         stocks = observation["stocks"]
 
         # Sort products by largest area first to place bigger items first
-        products = sorted(products, key=lambda item: item['size'][0] * item['size'][1], reverse=True)
+        products = sorted(
+            products, key=lambda item: item['size'][0] * item['size'][1], reverse=True)
 
         # Select the first available product
         selected_product = None
@@ -54,11 +54,13 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
             # Here, we'll find only the largest free rectangle for simplicity.
             free_rect = self.get_largest_free_rectangle(stock)
             if free_rect is not None:
-                rect_x, rect_y, rect_h, rect_w = free_rect  # top-left corner (x,y) and size (h,w)
+                # top-left corner (x,y) and size (h,w)
+                rect_x, rect_y, rect_h, rect_w = free_rect
 
                 # Try fitting product without rotation
                 if product_size[0] <= rect_h and product_size[1] <= rect_w:
-                    waste = (rect_h * rect_w) - (product_size[0] * product_size[1])
+                    waste = (rect_h * rect_w) - \
+                        (product_size[0] * product_size[1])
                     if waste < min_waste:
                         min_waste = waste
                         best_stock_idx = stock_idx
@@ -67,7 +69,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
 
                 # Try fitting product with rotation
                 if product_size[1] <= rect_h and product_size[0] <= rect_w:
-                    waste = (rect_h * rect_w) - (product_size[0] * product_size[1])
+                    waste = (rect_h * rect_w) - \
+                        (product_size[0] * product_size[1])
                     if waste < min_waste:
                         min_waste = waste
                         best_stock_idx = stock_idx
@@ -85,7 +88,7 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
         return None
 
     def compute_max_placement(self, available_stock_dim, product_dim, product_quantity):
-    # Calculate the maximum number of product pieces that can fit into the given stock dimensions
+        # Calculate the maximum number of product pieces that can fit into the given stock dimensions
         max_fit_width = available_stock_dim[0] // product_dim[0]
         max_fit_height = available_stock_dim[1] // product_dim[1]
         return min(product_quantity, max_fit_width * max_fit_height)
@@ -99,8 +102,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
         # Sort products by descending area
         indexed_products = list(enumerate(item_list))
         ordered_products = sorted(
-            indexed_products, 
-            key=lambda prod: prod[1]['size'][0] * prod[1]['size'][1], 
+            indexed_products,
+            key=lambda prod: prod[1]['size'][0] * prod[1]['size'][1],
             reverse=True
         )
 
@@ -147,7 +150,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
                         height_fitting = remaining_h // o_h
                         max_additional_fit = width_fitting * height_fitting
 
-                        fitted_units = min(other_prod['quantity'], max_additional_fit)
+                        fitted_units = min(
+                            other_prod['quantity'], max_additional_fit)
                         if fitted_units > 0:
                             provisional_pattern[other_idx] = fitted_units
                             remaining_w -= o_w * fitted_units
@@ -174,7 +178,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
 
         available_stocks = state_observation["stocks"]
         current_products = state_observation["products"]
-        total_left_products = sum([itm["quantity"] for itm in current_products])
+        total_left_products = sum([itm["quantity"]
+                                  for itm in current_products])
 
         # Reset environment if minimal products left
         if total_left_products == 1:
@@ -191,7 +196,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
         # Sort stocks by area, largest first
         sorted_stocks = sorted(
             enumerate(available_stocks),
-            key=lambda st: self._get_stock_size_(st[1])[0] * self._get_stock_size_(st[1])[1],
+            key=lambda st: self._get_stock_size_(
+                st[1])[0] * self._get_stock_size_(st[1])[1],
             reverse=True
         )
 
@@ -204,7 +210,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
 
             # Generate patterns if not yet generated
             if not self.cached_blueprints:
-                self.cached_blueprints = self.generate_cut_patterns(current_products, current_dimensions)
+                self.cached_blueprints = self.generate_cut_patterns(
+                    current_products, current_dimensions)
 
             # Try placing according to generated patterns
             for pattern_id, blueprint in enumerate(self.cached_blueprints):
@@ -219,7 +226,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
 
                             # Choose a valid position not already used
                             for candidate_pos in candidate_positions:
-                                position_key = (*candidate_pos, *current_products[prod_id]["size"])
+                                position_key = (
+                                    *candidate_pos, *current_products[prod_id]["size"])
                                 if position_key not in self.filled_areas[s_idx]:
                                     self.filled_areas[s_idx].add(position_key)
                                     return {
@@ -232,7 +240,8 @@ class Policy2353132_2152950_2353081_2353136_2352001(Policy):
             self.current_stock_pointer += 1
             if self.current_stock_pointer >= len(available_stocks):
                 self.current_stock_pointer = 0
-                self.cached_blueprints = self.generate_cut_patterns(current_products, current_dimensions)
+                self.cached_blueprints = self.generate_cut_patterns(
+                    current_products, current_dimensions)
                 self.exploited_patterns = {}
 
         # If no placements possible

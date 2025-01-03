@@ -35,7 +35,6 @@ def run_one_episode(config, policy):
 
     terminated = False
     truncated = False
-    info = {"filled_ratio": 1.0, "trim_loss": 1.0}
 
     try:
         while not terminated and not truncated:
@@ -43,6 +42,7 @@ def run_one_episode(config, policy):
             observation, reward, terminated, truncated, info = env.step(action)
     except Exception as e:
         print(f"Error: {e}")
+        info = {"filled_ratio": 1.0, "trim_loss": 1.0}
 
     return info
 
@@ -61,16 +61,12 @@ def grade_one_group(group_folder, force=False):
             print(f"{group_folder} is already graded!")
             continue
 
-        try:
-            policy = policy_class(policy_id=pid)
-            policy_has_bug = False
-        except Exception as e:
-            print(f"Error: {e}")
-            policy_has_bug = True
-
         results = []
         for config in CONFIGS:
-            if policy_has_bug:
+            try:
+                policy = policy_class(policy_id=pid)
+            except Exception as e:
+                print(f"Error: {e}")
                 results.append({"filled_ratio": 1.0, "trim_loss": 1.0})
                 continue
 
@@ -79,8 +75,8 @@ def grade_one_group(group_folder, force=False):
             future = executor.submit(run_one_episode, config, policy)
 
             try:
-                # Timeout after 300 seconds
-                result = future.result(timeout=300)
+                # Timeout after 900 seconds
+                result = future.result(timeout=900)
             except TimeoutError:
                 print("Function execution exceeded the time limit!")
                 result = {"filled_ratio": 1.0, "trim_loss": 1.0}
@@ -111,7 +107,8 @@ def grade_all_groups(args):
 
     with ProcessPoolExecutor(max_workers=args.num_workers) as executor:
         results = list(
-            tqdm(executor.map(grade_one_group, group_folders), total=len(group_folders))
+            tqdm(executor.map(grade_one_group, group_folders),
+                 total=len(group_folders))
         )
 
     if sum(results) == len(group_folders):
