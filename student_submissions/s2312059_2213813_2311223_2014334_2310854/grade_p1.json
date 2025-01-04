@@ -21,11 +21,11 @@
     },
     {
         "filled_ratio": 0.28,
-        "trim_loss": 0.14529585937773223
+        "trim_loss": 0.14477342114480646
     },
     {
         "filled_ratio": 0.05,
-        "trim_loss": 0.2006952311411526
+        "trim_loss": 0.1928968142396293
     },
     {
         "filled_ratio": 0.25,
@@ -33,7 +33,7 @@
     },
     {
         "filled_ratio": 0.2,
-        "trim_loss": 0.13037825292190555
+        "trim_loss": 0.13141106054601198
     },
     {
         "filled_ratio": 0.05,

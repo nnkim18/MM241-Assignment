@@ -24,8 +24,8 @@
         "trim_loss": 1.0
     },
     {
-        "filled_ratio": 1.0,
-        "trim_loss": 1.0
+        "filled_ratio": 0.05,
+        "trim_loss": 0.14163787265733488
     },
     {
         "filled_ratio": 1.0,

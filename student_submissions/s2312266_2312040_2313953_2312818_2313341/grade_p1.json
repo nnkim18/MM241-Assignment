@@ -20,23 +20,23 @@
         "trim_loss": 0.1473796976022602
     },
     {
+        "filled_ratio": 0.26,
+        "trim_loss": 0.09052353435105619
+    },
+    {
+        "filled_ratio": 0.04,
+        "trim_loss": 0.021204430224766917
+    },
+    {
         "filled_ratio": 1.0,
         "trim_loss": 1.0
+    },
+    {
+        "filled_ratio": 0.19333333333333333,
+        "trim_loss": 0.08776092015901366
     },
     {
         "filled_ratio": 0.05,
-        "trim_loss": 0.03976875549328211
-    },
-    {
-        "filled_ratio": 1.0,
-        "trim_loss": 1.0
-    },
-    {
-        "filled_ratio": 0.02666666666666667,
-        "trim_loss": 0.0435922257398903
-    },
-    {
-        "filled_ratio": 0.02,
-        "trim_loss": 0.0017092178236756549
+        "trim_loss": 0.08290994203124868
     }
 ]
