@@ -1,6 +1,6 @@
 from policy import Policy
-from policyHeuristic import PolicyHeuristic
-from policyAC import PolicyAC
+from .policyHeuristic import PolicyHeuristic
+from .policyAC import PolicyAC
 
 
 class Policy2310621_2311209_2310579_2312496_2312509(Policy):
