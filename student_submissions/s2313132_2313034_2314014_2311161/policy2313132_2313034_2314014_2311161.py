@@ -3,7 +3,7 @@ import random
 from policy import Policy
 
 
-class Policy2313132_2313034_2314041_2311161(Policy):
+class Policy2313132_2313034_2314014_2311161(Policy):
     def __init__(self, policy_id=1, population_size=75, generations=100, mutation_rate=0.3):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         if policy_id == 1:

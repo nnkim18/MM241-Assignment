@@ -32,7 +32,7 @@ class PolicyHeuristic(Policy):
         :return: Dictionary with stock_idx, size, and position.
         """
         if self.policy_id == 1:
-            return self.dp_action(observation, info)
+            return self.ffh_action(observation, info)
         elif self.policy_id == 2:
             return self.sa_action(observation, info)
         

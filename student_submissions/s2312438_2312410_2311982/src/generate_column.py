@@ -1,6 +1,7 @@
 from policy import Policy
 import numpy as np
 
+
 class GenerateColumn(Policy):
     def __init__(self):
         super().__init__()
@@ -9,7 +10,7 @@ class GenerateColumn(Policy):
         self.current_stock = 0      # Track current stock
         self.used_positions = {}    # Track used positions per stock
         self.new_game = True        # Track new game
-    
+
     def reset(self):
         """Reset the environment and any necessary parameters."""
         self.patterns.clear()
@@ -21,24 +22,25 @@ class GenerateColumn(Policy):
         """
         Generate feasible cutting patterns for the current stock
         based on available products.
-        
+
         Args:
             products (list): List of product dictionaries with size and quantity.
             stock_size (tuple): Width and height of the stock.
-        
+
         Returns:
             list: List of patterns, where each pattern is an array of quantities.
         """
         # Sort products by area (largest to smallest)
-        sorted_products = sorted(enumerate(products), key=lambda x: -x[1]['size'][0] * x[1]['size'][1])
+        sorted_products = sorted(
+            enumerate(products), key=lambda x: -x[1]['size'][0] * x[1]['size'][1])
         patterns = []
 
         # Try to create patterns for each product
         for i, prod_src in sorted_products:
             # Rotate the product to create a new pattern
             rotate_products = {
-                'size': (prod['size'][1], prod['size'][0]),
-                'quantity': prod['quantity']
+                'size': (prod_src['size'][1], prod_src['size'][0]),
+                'quantity': prod_src['quantity']
             }
             for prod in [prod_src, rotate_products]:
                 if prod['quantity'] > 0:
@@ -50,8 +52,8 @@ class GenerateColumn(Policy):
                         continue
 
                     # Initialize pattern and remaining space
-                    pattern = [0] * len(products)              
-                    remaining_w, remaining_h = stock_w, stock_h 
+                    pattern = [0] * len(products)
+                    remaining_w, remaining_h = stock_w, stock_h
                     # Calculate maximum number of pieces that can be cut
                     max_pieces_w = remaining_w // width
                     max_pieces_h = remaining_h // height
@@ -68,7 +70,8 @@ class GenerateColumn(Policy):
                                 if w2 <= remaining_w and h2 <= remaining_h:
                                     max_other = min(
                                         other_prod['quantity'],
-                                        (remaining_w // w2) * (remaining_h // h2)
+                                        (remaining_w // w2) *
+                                        (remaining_h // h2)
                                     )
                                     if max_other > 0:
                                         pattern[j] = max_other
@@ -82,11 +85,11 @@ class GenerateColumn(Policy):
     def get_action(self, observation, info):
         """
         Determine the next action based on the current state of the game.
-        
+
         Args:
             observation (dict): Includes "stocks" (list of stocks) and "products" (list of products).
             info (dict): Additional game-related information.
-        
+
         Returns:
             dict: Action dictionary specifying stock index, product size, and placement position.
         """
@@ -95,9 +98,12 @@ class GenerateColumn(Policy):
             self.reset()  # Reset the environment or any necessary parameters
             self.new_game = False  # Set new_game to False to avoid resetting again
 
-        stocks = observation["stocks"]  # List of stocks (probably locations or bins)
-        products = observation["products"]  # List of products to be placed in stocks
-        remaining_products = np.sum([p["quantity"] for p in products])  # Count how many products are remaining
+        # List of stocks (probably locations or bins)
+        stocks = observation["stocks"]
+        # List of products to be placed in stocks
+        products = observation["products"]
+        # Count how many products are remaining
+        remaining_products = np.sum([p["quantity"] for p in products])
 
         # If only one product is left, mark the game as new for the next iteration
         if remaining_products == 1:
@@ -114,10 +120,11 @@ class GenerateColumn(Policy):
         # Sort stocks by the area of each stock (width * height)
         sorted_stocks = sorted(
             enumerate(stocks),
-            key=lambda x: self._get_stock_size_(x[1])[0] * self._get_stock_size_(x[1])[1],
+            key=lambda x: self._get_stock_size_(
+                x[1])[0] * self._get_stock_size_(x[1])[1],
             reverse=True  # Sort in descending order of size
         )
-        
+
         # Sort products by size (largest area first)
         products = sorted(
             products,
@@ -130,8 +137,9 @@ class GenerateColumn(Policy):
             if idx not in self.used_positions:
                 self.used_positions[idx] = set()
 
-            stock_size = self._get_stock_size_(stocks[idx])  # Get the size of the current stock
-            
+            # Get the size of the current stock
+            stock_size = self._get_stock_size_(stocks[idx])
+
             # Generate or update patterns if none exists
             if not self.patterns:
                 self.patterns = self._generate_patterns(products, stock_size)
@@ -146,16 +154,20 @@ class GenerateColumn(Policy):
                                 stocks[idx],
                                 products[prod_idx]["size"]
                             )
-                            
+
                             # Loop through feasible positions
                             for pos in positions:
                                 pos_key = (*pos, *products[prod_idx]["size"])
-                                if pos_key not in self.used_positions[idx]:  # Check if the position is already used
-                                    self.used_positions[idx].add(pos_key)  # Mark this position as used
+                                # Check if the position is already used
+                                if pos_key not in self.used_positions[idx]:
+                                    # Mark this position as used
+                                    self.used_positions[idx].add(pos_key)
                                     return {
                                         "stock_idx": idx,  # Return the stock index where the product will go
-                                        "size": np.array(products[prod_idx]["size"]),  # Return the size of the product
-                                        "position": np.array(pos)  # Return the position where the product is placed
+                                        # Return the size of the product
+                                        "size": np.array(products[prod_idx]["size"]),
+                                        # Return the position where the product is placed
+                                        "position": np.array(pos)
                                     }
 
             # If the current stock is full, try the next stock
@@ -172,19 +184,19 @@ class GenerateColumn(Policy):
             "size": np.array([0, 0]),  # No product to place
             "position": np.array([0, 0])  # No position to place
         }
-    
+
     def _find_feasible_positions(self, stock, product_size):
         """
         Find valid positions on a stock where a product can be placed.
-        
+
         Args:
             stock (dict): Stock properties.
             product_size (tuple): Width and height of the product.
-        
+
         Returns:
             list: List of feasible positions (x, y) for placement.
         """
-        
+
         stock_w, stock_h = self._get_stock_size_(stock)
         prod_w, prod_h = product_size
         positions = []

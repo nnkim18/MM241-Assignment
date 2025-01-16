@@ -1,9 +1,8 @@
-﻿from tkinter import SE
-from policy import Policy
+﻿from policy import Policy
 from scipy.optimize import linprog
-from pulp import LpProblem, LpVariable, LpMinimize, lpSum
 import random
 import numpy as np
+
 
 class Policy2311787_2312514_2420004_2211155_2313562(Policy):
     def __init__(self, policy_id=1):
@@ -19,11 +18,11 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
             self.visited = []
             pass
 
-    def get_max_uncut_stock(self,observation,info):
+    def get_max_uncut_stock(self, observation, info):
         list_stocks = observation["stocks"]
         max_w = -1
         max_h = -1
-        
+
         for sidx, stock in enumerate(list_stocks):
             stock_w, stock_h = self._get_stock_size_(stock)
 
@@ -34,7 +33,7 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
                 max_h = stock_h
                 max_idx = sidx
                 max_stock = stock
-            
+
         return max_idx, max_stock if max_w > 0 else (-1, None)
 
     def GreedyFFDH(self, observation, info):
@@ -68,9 +67,9 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
                         return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
             else:
                 if stock_h >= prod_w and stock_w >= prod_h:
-                     pos_x, pos_y = None, None
-                        
-                     for x in range(stock_w - prod_h + 1):
+                    pos_x, pos_y = None, None
+
+                    for x in range(stock_w - prod_h + 1):
                         for y in range(stock_h - prod_w + 1):
                             if self._can_place_(stock, (x, y), prod_size[::-1]):
                                 prod_size = prod_size[::-1]
@@ -78,14 +77,14 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
                                 break
                         if pos_x is not None and pos_y is not None:
                             break
-                     if pos_x is not None and pos_y is not None:
+                    if pos_x is not None and pos_y is not None:
                         stock_idx = i
                         return {"stock_idx": stock_idx, "size": prod_size, "position": (pos_x, pos_y)}
 
-        stock_idx, next_stock = self.get_max_uncut_stock(observation,info)
+        stock_idx, next_stock = self.get_max_uncut_stock(observation, info)
         stock_w, stock_h = self._get_stock_size_(next_stock)
 
-        if (stock_h > stock_w) : # rotate stock
+        if (stock_h > stock_w):  # rotate stock
             if self._can_place_(next_stock, (0, 0), prod_size[::-1]):
                 self.visited.append(stock_idx)
                 return {"stock_idx": stock_idx, "size": prod_size[::-1], "position": (0, 0)}
@@ -95,7 +94,7 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
                 self.visited.append(stock_idx)
                 return {"stock_idx": stock_idx, "size": prod_size, "position": (0, 0)}
 
-    def get_max_product(self,observation, info):
+    def get_max_product(self, observation, info):
         list_prods = observation["products"]
         max_w = -1
         max_h = -1
@@ -109,11 +108,11 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
                     max_w = prod_w
                     max_h = prod_h
 
-        return max_w, max_h 
-
+        return max_w, max_h
 
     """"""""""""""""""""""""""""""""""""""""""""""""
 # implement the column generation
+
     def column_generation(self, observation, info):
         list_prods = observation["products"]
         best_column = None
@@ -121,12 +120,15 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
 
         # Iterate over each stock
         for stock_idx, stock in enumerate(observation["stocks"]):
-            stock_w, stock_h = self._get_stock_size_(stock)  # Get stock dimensions
+            stock_w, stock_h = self._get_stock_size_(
+                stock)  # Get stock dimensions
 
             # Solve Knapsack for width
-            width_items = [(prod["quantity"], prod["size"][1]) for prod in list_prods if prod["quantity"] > 0]
+            width_items = [(prod["quantity"], prod["size"][1])
+                           for prod in list_prods if prod["quantity"] > 0]
             width_capacity = stock_w
-            width_value, width_selected = self.solve_knapsack(width_items, width_capacity)
+            width_value, width_selected = self.solve_knapsack(
+                width_items, width_capacity)
 
             # Generate patterns from width results
             for item_idx in width_selected:
@@ -136,13 +138,15 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
                 # Solve Knapsack for length based on selected width pattern
                 length_items = [(1, prod_size[0])]
                 length_capacity = stock_h
-                length_value, length_selected = self.solve_knapsack(length_items, length_capacity)
+                length_value, length_selected = self.solve_knapsack(
+                    length_items, length_capacity)
 
                 # Check placement of the resulting pattern
                 for pos_x in range(stock_w - prod_size[0] + 1):
                     for pos_y in range(stock_h - prod_size[1] + 1):
                         if self._can_place_(stock, (pos_x, pos_y), prod_size):
-                            waste = self._calculate_waste(stock, (pos_x, pos_y), prod_size)
+                            waste = self._calculate_waste(
+                                stock, (pos_x, pos_y), prod_size)
 
                             if waste < best_weight:
                                 best_weight = waste
@@ -203,13 +207,14 @@ class Policy2311787_2312514_2420004_2211155_2313562(Policy):
         # Waste area calculation
         return stock_area - cut_area
     """"""""""""""""""""""""""""""""""""""""""""""""""
+
     def get_action(self, observation, info):
         # Student code here
-        if(self.policy_id == 1):
+        if (self.policy_id == 1):
             if info["filled_ratio"] == 0:
                 self.visited = []
-            return self.GreedyFFDH(observation,info)
-        elif(self.policy_id == 2):
+            return self.GreedyFFDH(observation, info)
+        elif (self.policy_id == 2):
             return self.column_generation(observation, info)
     # Student code here
     # You can add more functions if needed
