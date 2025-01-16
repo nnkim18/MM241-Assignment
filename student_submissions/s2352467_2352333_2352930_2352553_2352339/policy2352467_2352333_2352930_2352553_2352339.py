@@ -2,7 +2,7 @@
 from policy import Policy
 
 
-class Policy2352333_2352467_2352930_2352553_2352339(Policy):
+class Policy2352467_2352333_2352930_2352553_2352339(Policy):
     def __init__(self, policy_id=2):
         assert policy_id in [1, 2], "Policy ID must be 1 or 2"
         self.dp = {}  # Dynamic programming memoization table
@@ -45,7 +45,7 @@ class Policy2352333_2352467_2352930_2352553_2352339(Policy):
         if all(p['quantity'] == 0 for p in products):
             return 0, None, None, None
 
-        stock_w, stock_h = self.get_stock_size(stock)
+        stock_w, stock_h = self._get_stock_size_(stock)
         best_value = float('-inf')
         best_move = None
 
@@ -84,17 +84,17 @@ class Policy2352333_2352467_2352930_2352553_2352339(Policy):
             return sorted(items, key=lambda item: item["size"][0] * item["size"][1], reverse=True)
 
         def find_position_for_product(stock, product_size):
-            stock_w, stock_h = self.get_stock_size(stock)
+            stock_w, stock_h = self._get_stock_size_(stock)
             prod_w, prod_h = product_size
 
             for x in range(stock_w - prod_w + 1):
                 for y in range(stock_h - prod_h + 1):
-                    if self.can_place(stock, (x, y), product_size):
+                    if self._can_place_(stock, (x, y), product_size):
                         return (x, y)
             return None
 
         sorted_products = sort_by_area(observation["products"])
-        stocks_with_sizes = [(i, stock, *self.get_stock_size(stock))
+        stocks_with_sizes = [(i, stock, *self._get_stock_size_(stock))
                              for i, stock in enumerate(observation["stocks"])]
         stocks_with_sizes.sort(key=lambda s: s[2] * s[3], reverse=True)
 
