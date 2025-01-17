@@ -9,7 +9,7 @@ class Policy2310621_2311209_2310579_2312496_2312509(Policy):
 
         # Student code here
         if policy_id == 1:
-            self.polici_id = 1
+            self.policy_id = 1
         elif policy_id == 2:
             self.policy_id = 2
 
