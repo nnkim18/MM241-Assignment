@@ -62,9 +62,11 @@ if __name__ == "__main__":
             p1_eid = grade_p1[eid]
             p2_eid = grade_p2[eid]
 
-            score_dict[f"p1_e{eid}_filled_ratio"].append(p1_eid["filled_ratio"])
+            score_dict[f"p1_e{eid}_filled_ratio"].append(
+                p1_eid["filled_ratio"])
             score_dict[f"p1_e{eid}_trim_loss"].append(p1_eid["trim_loss"])
-            score_dict[f"p2_e{eid}_filled_ratio"].append(p2_eid["filled_ratio"])
+            score_dict[f"p2_e{eid}_filled_ratio"].append(
+                p2_eid["filled_ratio"])
             score_dict[f"p2_e{eid}_trim_loss"].append(p2_eid["trim_loss"])
 
             avg_filled_ratio += p1_eid["filled_ratio"] + p2_eid["filled_ratio"]
@@ -127,3 +129,17 @@ if __name__ == "__main__":
 
     score_df = pd.DataFrame(score_dict)
     score_df.to_excel("scores.xlsx", index=False)
+
+    score_by_student = {
+        "student_id": [],
+        "overall_score": [],
+    }
+    for _, row in score_df.iterrows():
+        group_folder = row["group_folder"]
+        student_ids = group_folder[1:].split("_")
+        for student_id in student_ids:
+            score_by_student["student_id"].append(student_id)
+            score_by_student["overall_score"].append(row["overall_score"])
+
+    score_by_student_df = pd.DataFrame(score_by_student)
+    score_by_student_df.to_excel("scores_by_student.xlsx", index=False)
